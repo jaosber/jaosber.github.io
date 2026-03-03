@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; }
+    html, body { overflow: hidden; }
+    canvas { display: block; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+</head>
+<body>
+  <script>
+    let TIME = 0.0;
+let canvas;
+let font;
+let scaleX = 100, scaleY = 100;
+let mx = 0.0 , my = 0.0;
+let pmx = 0.0 , pmy = 0.0;
+
+let colorBackground = '#0E1012'; //#1A3146
+let colorHUD = "#E5DCDC";
+let dpi = 3;
+
+let wcamera = [0.0,0.0];
+let wzoom = 1.0;
+let wscaleoffset = [0,0];
+
+function preload(){
+  
+  //font = loadFont('assets/fonts/Inconsolata-Regular.ttf');
+  
+  return;
+}
+
+function setup() {
+  
+  //canvas = createCanvas(960,540);
+  canvas = createCanvas(windowWidth, windowHeight);
+  frameRate (60);
+  smooth(8.0);  
+  pixelDensity(dpi);
+  
+  //textFont(font);
+  textSize(32.0);
+  textAlign(LEFT);
+  //textAlign(CENTER);
+  rectMode (CENTER);
+  prefconfig();
+  initconfig(); 
+  
+  return;
+}
+
+function windowResized() {
+  canvas = resizeCanvas(windowWidth, windowHeight);
+}
+
+function draw() {
+
+  drawloop(TIME);
+
+  return;
+}
+
+
+let x0 = 0.0;
+let y0 = 0.0;
+
+function drawloop(dtime){
+
+  push();
+
+  let t = dtime + 2.5;
+
+  background(colorBackground);
+  updateconfig();
+  
+  //dgrid(0,0, 250,250, 50,50, '#2F2F2F', 0.01);
+  //dgrid(0,0, 50,50,   50,50, '#595959', 0.01);
+  daxis(64.0,64.0);
+  noiseSeed(2910);
+
+  wzoom = 2.25;
+
+  let a1 = 1.9*cos(t*0.8) + 1.5;
+  let a2 = a1 - 1.5*cos(t*0.95) - PI*0.9;
+  
+  let r1 = 2.5 + 0.0*cos(t*0.5);
+  let r2 = 1.1 + 0.5*sin(t*0.9);
+  let r3 = -r1*(r1-r2)*(cos(a2-a1)-1)/((r2-r1)*cos(a2-a1)+r1+r2);
+  
+  let x1 = r1*cos(0)*0;
+  let y1 = r1*sin(0)*0;
+  let x2 = (r1-r2)*cos(a1);
+  let y2 = (r1-r2)*sin(a1);
+  let x3 = (r1-r3)*cos(a2);
+  let y3 = (r1-r3)*sin(a2);
+  
+  noFill();
+  //fill(255,255,255,100);
+  stroke(255);
+  strokeWeight(0.012);
+  //fill('#6EADCA');
+  //fill(255*raa(5*noise(x1)),255*raa(5*noise(y1)),255*raa(5*noise(x1+y1)));
+  dcircle([x1,y1],r1);
+  
+  //fill('#6ECA82');
+  //fill(115, 222, 179, 100);
+  dcircle([x2,y2],r2);
+  
+  //stroke('#C743CC');
+  
+  //fill(255,255,255,65);
+  //fill(115, 200, 222, 100);
+  dcircle([x3,y3],r3);
+  
+  //noFill();
+  
+  //fill(255,255,255,50);
+  
+  //fill(255);
+  //stext(""+r3,0.0,0.0,0.05);
+  
+  /*
+  let pos = postancircles ([x1,y1],[x2,y2],[x3,y3], -r1,r2,r3);
+  let c1 = pos[0];
+  let c2 = pos[1];
+  let c3 = pos[2];
+  let c4 = pos[3];
+  
+  stroke('#B5ABB5');
+  dcircle([c1[0],c1[1]],c1[2]);
+  dcircle([c2[0],c2[1]],c2[2]);
+  dcircle([c3[0],c3[1]],c3[2]);
+  dcircle([c4[0],c4[1]],c4[2]);*/
+  
+  /*
+  let pos = heuristicspos ([x1,y1],[x2,y2],[x3,y3], -r1,r2,r3);
+  let c1 = pos[0];
+  let c2 = pos[1];
+  //stroke('#B5ABB5');
+  dcircle([c1[0],c1[1]],c1[2]);
+  dcircle([c2[0],c2[1]],c2[2]);
+  
+  let circsl = heuristicspos ([x1,y1],[x2,y2],[c2[0],c2[1]], -r1,r2,c2[2]);
+  let circsr = heuristicspos ([x1,y1],[x2,y2],[c1[0],c1[1]], -r1,r2,c1[2]);
+  
+  dcircle([circsl[0][0],circsl[0][1]],circsl[0][2]);
+  dcircle([circsl[1][0],circsl[1][1]],circsl[1][2]);
+  dcircle([circsr[0][0],circsr[0][1]],circsr[0][2]);
+  dcircle([circsr[1][0],circsr[1][1]],circsr[1][2]);
+  
+  */
+  
+  //fill(50);
+  
+  let lrecursive = function(z1,z2,z3, r1,r2,r3, d){
+    
+    if(d < 0){ return; }
+    
+    let circs = heuristicspos(z1,z2,z3, r1,r2,r3);
+    let c1 = circs[0];
+    let c2 = circs[1];
+    let z4pp = [c1[0],c1[1]];
+    let z4nn = [c2[0],c2[1]];
+    let r4pp = c1[2];
+    let r4nn = c2[2];
+    
+    
+    let cs = circleorientation(z3, r3, z4pp, r4pp, z4nn, r4nn);
+    let cleft = cs[0];
+    
+    dcircle(cleft[0],cleft[1]);
+    lrecursive(z1,z2,cleft[0], r1,r2, cleft[1], d-1);
+    
+    //orecursive(z1,z3,z4pp, r1,r3,r4pp, 1);
+    //orecursive(z1,z3,z4nn, r1,r3,r4nn, 1);
+    
+    return;
+  }
+  
+  let rrecursive = function(z1,z2,z3, r1,r2,r3, d){
+    
+    if(d < 0){ return; }
+    
+    let circs = heuristicspos(z1,z2,z3, r1,r2,r3);
+    let c1 = circs[0];
+    let c2 = circs[1];
+    let z4pp = [c1[0],c1[1]];
+    let z4nn = [c2[0],c2[1]];
+    let r4pp = c1[2];
+    let r4nn = c2[2];
+    
+    let cs = circleorientation(z3, r3, z4pp, r4pp, z4nn, r4nn);
+    let cright = cs[1];
+    
+    dcircle(cright[0],cright[1]);
+    rrecursive(z1,z2,cright[0], r1,r2, cright[1], d-1);
+    
+    return;
+  }
+  
+  let drecursive = function(z1,z2,z3, r1,r2,r3, d){
+    
+    if(d < 0){ return; }
+    
+    let circs = heuristicspos(z1,z2,z3, r1,r2,r3);
+    let c1 = circs[0];
+    let c2 = circs[1];
+    let z4pp = [c1[0],c1[1]];
+    let z4nn = [c2[0],c2[1]];
+    let r4pp = c1[2];
+    let r4nn = c2[2];
+    
+    lrecursive(z1,z2,z3, r1,r2,r3, d);
+    rrecursive(z1,z2,z3, r1,r2,r3, d);
+    
+    //dcircle(z4pp,r4pp);
+    //dcircle(z4nn,r4nn);
+    
+    //drecursive(z1,z2,z4pp, r1,r2,r4pp, d-1);
+    //drecursive(z1,z2,z4nn, r1,r2,r4nn, d-1);
+    
+    //irecursive(z2,z3,z4pp, r2,r3,r4pp, 1);
+    //irecursive(z2,z3,z4nn, r2,r3,r4nn, 1);
+    
+    //orecursive(z1,z3,z4pp, r1,r3,r4pp, 1);
+    //orecursive(z1,z3,z4nn, r1,r3,r4nn, 1);
+    
+    return;
+  }
+  
+  let orecursive = function(z1,z3,z4, r1,r3,r4, d){
+    
+    if(d < 0){ return; }
+    
+    let circs = heuristicspos(z1,z3,z4, r1,r3,r4);
+    let c1 = circs[0];
+    let c2 = circs[1];
+    let z5pp = [c1[0],c1[1]];
+    let z5nn = [c2[0],c2[1]];
+    let r5pp = c1[2];
+    let r5nn = c2[2];
+    
+    dcircle(z5pp,r5pp);
+    dcircle(z5nn,r5nn);
+    
+    irecursive(z3,z4,z5pp, r3,r4,r5pp,1);
+    
+    orecursive(z1,z3,z5pp, r1,r3,r5pp, d-1);
+    orecursive(z1,z3,z5nn, r1,r3,r5nn, d-1);
+        
+    orecursive(z1,z4,z5pp, r1,r4,r5pp, d-1);
+    orecursive(z1,z4,z5nn, r1,r4,r5nn, d-1);
+    
+    return;
+  }
+  
+  let irecursive = function(z2,z3,z4, r2,r3,r4, d){
+    
+    if(d < 0){ return; }
+    
+    let circs = heuristicspos(z2,z3,z4, r2,r3,r4);
+    let c1 = circs[0];
+    let c2 = circs[1];
+    let z5pp = [c1[0],c1[1]];
+    let z5nn = [c2[0],c2[1]];
+    let r5pp = c1[2];
+    let r5nn = c2[2];
+    
+    dcircle(z5pp,r5pp);
+    dcircle(z5nn,r5nn);
+    
+    
+    irecursive(z3,z4,z5pp, r3,r4,r5pp, d-1);
+    irecursive(z2,z3,z5pp, r2,r3,r5pp, d-1);
+    irecursive(z2,z4,z5pp, r2,r4,r5pp, d-1);
+    
+    irecursive(z3,z4,z5nn, r3,r4,r5nn, d-1);
+    irecursive(z2,z3,z5nn, r2,r3,r5nn, d-1);
+    irecursive(z2,z4,z5nn, r2,r4,r5nn, d-1);
+    
+    /*
+    irecursive(z3,z4,z5nn, r3,r4,r5nn, d-1);
+    irecursive(z2,z3,z5nn, r2,r3,r5nn, d-1);
+    irecursive(z2,z4,z5nn, r2,r3,r5nn, d-1);*/
+            
+    return;
+  }
+  
+  
+  let mtree = new BinaryTree();
+  
+  mtree.insert({position:[x3,y3], radius: r3, ikey:generatekey([x3,y3,r3]) });
+  
+  let dtreerecursive = function(z1,z2,z3, r1,r2,r3, dtree, d){
+    
+    if(d < 0){ return; }
+    
+    let circs = heuristicspos(z1,z2,z3, r1,r2,r3);
+    let c1 = circs[0];
+    let c2 = circs[1];
+    
+    let z4pp = [c1[0],c1[1]];
+    let r4pp = c1[2];
+    
+    let z4nn = [c2[0],c2[1]];
+    let r4nn = c2[2];
+    
+    if(dtree.search(generatekey(z4pp,r4pp)) == null){
+      dcircle(z4pp,r4pp);
+      dtree.insert({position:z4pp, radius: r4pp, ikey:generatekey(z4pp,r4pp) });
+      dtreerecursive(z1,z2,z4pp, r1,r2,r4pp, dtree, d-1);
+    }
+    
+    
+    if(dtree.search(generatekey(z4nn,r4nn)) == null){
+      dcircle(z4nn,r4nn);
+      dtree.insert({position:z4nn, radius: r4nn,ikey:generatekey(z4nn,r4nn) });
+      dtreerecursive(z1,z2,z4nn, r1,r2,r4nn, dtree, d-1);
+    }
+    
+    
+    return;
+  }
+  
+  let marr = new CirclesArray();
+  
+  marr.insert({position:[x1,y1], radius: r1, ikey:generatekey([x1,y1,r1]) });
+  marr.insert({position:[x2,y2], radius: r2, ikey:generatekey([x2,y2,r2]) });
+  marr.insert({position:[x3,y3], radius: r3, ikey:generatekey([x3,y3,r3]) });
+  
+  let oarrayrecursive = function(z1,z3,z4, r1,r3,r4, darr, d){
+    
+    if(d < 0){ return; }
+    
+    let circs = heuristicspos(z1,z3,z4, r1,r3,r4);
+    let c1 = circs[0];
+    let c2 = circs[1];
+    let z5pp = [c1[0],c1[1]];
+    let z5nn = [c2[0],c2[1]];
+    let r5pp = c1[2];
+    let r5nn = c2[2];
+        
+    //irecursive(z3,z4,z5pp, r3,r4,r5pp,1);
+    
+    let ukey = generatekey(z5pp,r5pp);
+    
+    if(darr.search(ukey) == null){
+      dcircle(z5pp,r5pp);
+      darr.insert({position:z5pp, radius: r5pp, ikey:ukey });
+      oarrayrecursive(z1,z3,z5pp, r1,r3,r5pp,darr,d-1);
+      oarrayrecursive(z1,z4,z5pp, r1,r4,r5pp,darr,d-1);
+    }
+    
+    ukey = generatekey(z5nn,r5nn);
+    
+    if(darr.search(ukey) == null){
+      dcircle(z5nn,r5nn);
+      darr.insert({position:z5nn, radius: r5nn, ikey:ukey });
+      oarrayrecursive(z1,z3,z5nn, r1,r3,r5nn,darr,d-1);
+      oarrayrecursive(z1,z4,z5nn, r1,r4,r5nn,darr,d-1);
+    }
+    
+    //orecursive(z1,z3,z5pp, r1,r3,r5pp, d-1);
+    //orecursive(z1,z3,z5nn, r1,r3,r5nn, d-1);
+      
+    //orecursive(z1,z4,z5pp, r1,r4,r5pp, d-1);
+    //orecursive(z1,z4,z5nn, r1,r4,r5nn, d-1);
+    
+    return;
+  }
+  
+  
+  let darrayrecursive = function(z1,z2,z3, r1,r2,r3, darr, d){
+    
+    if(d < 0){ return; }
+    
+    let circs = heuristicspos(z1,z2,z3, r1,r2,r3);
+    let c1 = circs[0];
+    let c2 = circs[1];
+    
+    let z4pp = [c1[0],c1[1]];
+    let r4pp = c1[2];
+    
+    let z4nn = [c2[0],c2[1]];
+    let r4nn = c2[2];
+    
+    let ukey = generatekey(z4pp,r4pp);
+    
+    
+    if(darr.search(ukey) == null){
+      dcircle(z4pp,r4pp);
+      darr.insert({position:z4pp, radius: r4pp, ikey:ukey });
+      darrayrecursive(z1,z2,z4pp, r1,r2,r4pp, darr, d-1);
+      oarrayrecursive(z1,z3,z4pp, r1,r3,r4pp, darr, 3);
+    }
+    
+    ukey = generatekey(z4nn,r4nn);
+    
+    if(darr.search(ukey) == null){
+      dcircle(z4nn,r4nn);
+      darr.insert({position:z4nn, radius: r4nn, ikey:ukey});
+      darrayrecursive(z1,z2,z4nn, r1,r2,r4nn, darr, d-1);
+      
+      oarrayrecursive(z1,z3,z4nn, r1,r3,r4nn, darr, 3);
+    }
+    
+    return;
+  }
+  
+  darrayrecursive([x1,y1],[x2,y2],[x3,y3], -r1,r2,r3, marr, 6);
+  
+  
+  //dtreerecursive([x1,y1],[x2,y2],[x3,y3], -r1,r2,r3, mtree, 4);
+  //drecursive([x1,y1],[x2,y2],[x3,y3], -r1,r2,r3, 12);
+  
+  //fill('#ffffff');
+  stroke(255);
+  //dvec([0,0],[x3,y3],0.1,0.0);  
+  let vel_dir = vmult( 1/sqrt( (x3-x0)*(x3-x0) + (y3-y0)*(y3-y0)),[x3-x0,y3-y0] );
+  push();
+  translate(x3,y3)
+  //dvec([0,0],vel_dir,0.1,0.0);
+  pop();
+  
+  x0 = x3;
+  y0 = y3;
+  
+  /*
+  pos = heuristicspos ([x2,y2],[x3,y3],[c1[0],c1[1]],r2,r3,c1[2]);
+  let c1r = pos[0];
+  let c2r = pos[1];
+  
+  dcircle([c1r[0],c1r[1]],c1r[2]);
+  dcircle([c2r[0],c2r[1]],c2r[2]);
+  
+  pos = heuristicspos ([x2,y2],[x3,y3],[c2[0],c2[1]],r2,r3,c2[2]);
+  c1r = pos[0];
+  c2r = pos[1];
+  
+  dcircle([c1r[0],c1r[1]],c1r[2]);
+  dcircle([c2r[0],c2r[1]],c2r[2]);
+  
+  pos = heuristicspos ([x1,y1],[x3,y3],[c1[0],c1[1]],-r1,r3,c1[2]);
+  c1r = pos[0];
+  c2r = pos[1];
+  
+  dcircle([c1r[0],c1r[1]],c1r[2]);
+  dcircle([c2r[0],c2r[1]],c2r[2]);
+  
+  pos = heuristicspos ([x1,y1],[x3,y3],[c2[0],c2[1]],-r1,r3,c2[2]);
+  c1r = pos[0];
+  c2r = pos[1];
+  
+  dcircle([c1r[0],c1r[1]],c1r[2]);
+  dcircle([c2r[0],c2r[1]],c2r[2]); */
+  
+  //let rs = tanradius(-r1,r2,r3)
+  //dcircle([0,0],rs[0]);
+  //print(rs);
+  
+  //stroke('#752864');
+  //dcircle([0,0],rs[0]);
+  //stroke('#439A77');
+  //dcircle([0,0],rs[1]);
+  
+  /*
+  let di = 0.01;
+  for(let i = -5; i <= 5 ;i+=di){
+    
+    let k = 0.0000001;
+    let x1 = i;
+    let y1 = raa(k*x1); //2.0*noise(x1-t) + 0.25;
+    
+    let x2 = i+di;
+    let y2 = raa(k*x2); //2.0*noise(x2-t) + 0.25;
+    
+    stroke("#EC6969");
+    strokeWeight(0.01);
+    line(x1,y1, x2,y2);
+    //point(x,y);
+    
+  }*/
+  
+  //noLoop();
+  
+  wcamera = [0,0];
+  //wzoom = 1.5;
+  wscaleoffset = [0,0];
+
+  pop();
+  hud();
+
+  return;
+}
+
+// Class that manages an array of circles
+class CirclesArray {
+  constructor() {
+    this.circles = [];
+  }
+  
+  // Inserts a circle into the array
+  insert(icircle) {
+    // It is assumed that 'circle' already contains the 'ikey' property
+    this.circles.push(icircle);
+  }
+  
+  // Searches for and returns a circle by its key
+  search(ikey) {
+    return this.circles.find(c => c.ikey === ikey) || null;
+  }
+  
+  // Removes the circle that matches the key from the array and returns it
+  remove(ikey) {
+    const index = this.circles.findIndex(c => c.ikey === ikey);
+    if (index !== -1) {
+      return this.circles.splice(index, 1)[0];
+    }
+    return null;
+  }
+}
+
+function generatekey(position,radius) {
+  
+  const precision = 9;
+  // Convert each component of the position to a string with 4 decimal places.
+  const formattedPosition = position.map(coor => Number(coor).toFixed(precision));
+  // Convert the radius to a string with 4 decimal places.
+  const formattedRadius = Number(radius).toFixed(precision);
+  
+  // Concatenate the position and radius with an underscore as a separator.
+  return [...formattedPosition, formattedRadius].join('_');
+}
+
+class CNode {
+  constructor(data) {
+    //data: {position: [x, y], radius: r, ikey: x+y+r}
+    this.data = data;
+    this.left = null;
+    this.right = null;
+  }
+}
+
+// Clase para el árbol binario de esferas.
+class BinaryTree {
+  
+  constructor() {
+    this.root = null;
+  }
+  
+  // Inserta una esfera en el árbol.
+  // Se usa sphere.position[0] (la coordenada x) como clave de ordenación.
+  insert(ncircle) {
+    const newNode = new CNode(ncircle);
+    if (this.root === null) {
+      this.root = newNode;
+    } else {
+      this._insertNode(this.root, newNode);
+    }
+  }
+  
+  _insertNode(node, newNode) {
+    // Si la componente x de la esfera a insertar es menor, se va a la rama izquierda;
+    // de lo contrario, a la derecha.
+    if (newNode.data.position[0] < node.data.position[0]) {
+      if (node.left === null) {
+        node.left = newNode;
+      } else {
+        this._insertNode(node.left, newNode);
+      }
+    } else {
+      if (node.right === null) {
+        node.right = newNode;
+      } else {
+        this._insertNode(node.right, newNode);
+      }
+    }
+  }
+  
+  // Busca un nodo cuyo valor clave (componente x de la posición) coincida con dkey.
+  // Retorna el nodo encontrado o null si no se encuentra.
+  search(dkey) {
+    return this._searchNode(this.root, dkey);
+  }
+  
+  _searchNode(node, dkey) {
+    
+    if (node === null) {
+      return null;
+    }
+    
+    if (dkey === node.data.ikey){
+      return node;
+    }
+    
+    if (dkey < node.data.position[0]){
+      return this._searchNode(node.left, dkey);
+    }else{
+      return this._searchNode(node.right, dkey);
+    }
+    
+  }
+  
+  // Elimina del árbol el nodo cuya clave (componente x de la posición) es dkey.
+  remove(dkey) {
+    this.root = this._removeNode(this.root, dkey);
+  }
+  
+  _removeNode(node, dkey) {
+    if (node === null) {
+      return null;
+    }
+    
+    if (dkey < node.data.position[0]) {
+      node.left = this._removeNode(node.left, dkey);
+      return node;
+    } else if (dkey > node.data.position[0]) {
+      node.right = this._removeNode(node.right, dkey);
+      return node;
+    } else {
+      // Nodo encontrado:
+      // Caso 1: sin hijos.
+      if (node.left === null && node.right === null) {
+        return null;
+      }
+      // Caso 2: solo hijo derecho.
+      if (node.left === null) {
+        return node.right;
+      }
+      // Caso 3: solo hijo izquierdo.
+      if (node.right === null) {
+        return node.left;
+      }
+      // Caso 4: dos hijos.
+      // Se busca el nodo con la clave mínima en el subárbol derecho.
+      const aux = this._findMinNode(node.right);
+      // Se reemplaza el contenido del nodo actual con el del auxiliar.
+      node.data = aux.data;
+      // Se elimina el nodo duplicado en el subárbol derecho.
+      node.right = this._removeNode(node.right, aux.data.position[0]);
+      return node;
+    }
+  }
+  
+  //Retorna el nodo con la clave mínima del subárbol (usando la componente x).
+  _findMinNode(node) {
+    while (node.left !== null) {
+      node = node.left;
+    }
+    return node;
+  }
+  
+}
+
+function circleorientation(pm, rm, p1, r1, p2, r2) {
+  // Helper function to get the angle of a point p relative to pm, normalized in [0, 2π)
+  function getAngle(p) {
+    let ang = Math.atan2(p[1] - pm[1], p[0] - pm[0]);
+    return (ang < 0) ? ang + 2 * Math.PI : ang;
+  }
+  
+  // Calculate the angles of the centers of c1 and c2 relative to pm
+  let ang1 = getAngle(p1);
+  let ang2 = getAngle(p2);
+  
+  // Function that determines if the angle is within the "right" interval
+  function isRight(angulo) {
+    return (angulo < Math.PI / 2 || angulo > 3 * Math.PI / 2);
+  }
+  
+  let p1Right = isRight(ang1);
+  let p2Right = isRight(ang2);
+  
+  let c_left, c_right;
+  
+  // Assume that one of the circles is on the right and the other on the left
+  if (p1Right && !p2Right) {
+    c_right = [p1, r1];
+    c_left  = [p2, r2];
+  } else if (!p1Right && p2Right) {
+    c_right = [p2, r2];
+    c_left  = [p1, r1];
+  } else {
+    // If both are in the same half-plane, they are ordered based on the angle value (smaller = right)
+    if (ang1 < ang2) {
+      c_right = [p1, r1];
+      c_left  = [p2, r2];
+    } else {
+      c_right = [p2, r2];
+      c_left  = [p1, r1];
+    }
+  }
+  
+  return [c_left, c_right];
+}
+
+function tanradius(r1,r2,r3){  
+  
+  let k4neg = (1/r1) + (1/r2) + (1/r3) - 2*sqrt( (1/r1)*(1/r2) + (1/r1)*(1/r3) + (1/r2)*(1/r3) );
+  let k4pos = (1/r1) + (1/r2) + (1/r3) + 2*sqrt( (1/r1)*(1/r2) + (1/r1)*(1/r3) + (1/r2)*(1/r3) );
+  
+  let r4neg = 1/k4neg;
+  let r4pos = 1/k4pos;
+  
+  return [isNaN(r4neg) ? 0:r4neg, isNaN(r4pos) ? 0:r4pos];
+}
+  
+function postancircles(z1,z2,z3, r1,r2,r3){
+    
+    let arr_r4 = tanradius(r1,r2,r3);
+    let r4n = arr_r4[0];
+    let r4p = arr_r4[1];
+    
+    let k1 = 1/r1;
+    let k2 = 1/r2;
+    let k3 = 1/r3;
+    let k4n = 1/r4n;
+    let k4p = 1/r4p;
+    
+    let z4pp = zpos(z1, z2, z3, k1, k2, k3, k4p,  1);
+    let z4pn = zpos(z1, z2, z3, k1, k2, k3, k4n,  1);
+    let z4np = zpos(z1, z2, z3, k1, k2, k3, k4p, -1);
+    let z4nn = zpos(z1, z2, z3, k1, k2, k3, k4n, -1);
+    
+    return [ [z4pp[0],z4pp[1],r4p], 
+             [z4pn[0],z4pn[1],r4n],
+             [z4np[0],z4np[1],r4p],
+             [z4nn[0],z4nn[1],r4n],
+           ];
+  }
+
+function heuristicspos(z1,z2,z3, r1,r2,r3){
+  
+  let arr_r4 = tanradius(r1,r2,r3);
+  let r4n = arr_r4[0];
+  let r4p = arr_r4[1];
+    
+  let k1 = 1/r1;
+  let k2 = 1/r2;
+  let k3 = 1/r3;
+  let k4n = 1/r4n;
+  let k4p = 1/r4p;
+    
+  let z4pp = zpos(z1, z2, z3, k1, k2, k3, k4p,  1);
+  let z4pn = zpos(z1, z2, z3, k1, k2, k3, k4n,  1);
+  let z4np = zpos(z1, z2, z3, k1, k2, k3, k4p, -1);
+  let z4nn = zpos(z1, z2, z3, k1, k2, k3, k4n, -1);
+  
+  let x3 = z3[0];
+  let y3 = z3[1];
+  
+  let d1p = znorm(zsub(z1,z4pp));
+  let d2p = znorm(zsub(z2,z4pp));
+  let d3p = znorm(zsub(z3,z4pp));
+  
+  let d1n = znorm(zsub(z1,z4nn));
+  let d2n = znorm(zsub(z2,z4nn));
+  let d3n = znorm(zsub(z3,z4nn));
+  
+  let imin = -0.0000005;
+  let imax =  0.0000005;
+  
+  let cond1 = (isrange((r3+r4p)-d3p,imin,imax) == 1) || (isrange((r1+r4p)-d1p,imin,imax) == 1) || (isrange((r2+r4p)-d2p,imin,imax) == 1);
+  let cond2 = (isrange((r3+r4n)-d3n,imin,imax) == 1) || (isrange((r1+r4n)-d1n,imin,imax) == 1) || (isrange((r2+r4n)-d2n,imin,imax) == 1);
+  
+    
+  if(cond1 || cond2){
+    
+    return[
+          [z4pp[0],z4pp[1],r4p], 
+          [z4nn[0],z4nn[1],r4n]
+        ];
+    
+  }
+  
+  return[
+          [z4pn[0],z4pn[1],r4n],
+          [z4np[0],z4np[1],r4p]
+        ];
+}
+
+function isrange(x,a,b){
+  
+  return a <= x && x <= b ? 1 : 0; 
+}
+
+function zpos(z1, z2, z3, k1, k2, k3, k4, signvalue=1) {
+  
+  //z4 = ( z1*k1 + z2*k2 + z3*k3 + 2*sqrt(k1*k2*z1*z2 + k1*k3*z1*z3 + k2*k3*z2*z3) )/ k4
+  
+  // Primera parte: k1*z1 + k2*z2 + k3*z3
+  let term1 = zmult(z1, k1);
+  let term2 = zmult(z2, k2);
+  let term3 = zmult(z3, k3);
+  let sum = zadd(zadd(term1, term2), term3);
+  
+  //Segunda parte: sqrt( k1*k2*z1*z2 + k1*k3*z1*z3 + k2*k3*z2*z3 )
+  let prod1 = zmult(zmult(z1, z2), k1 * k2);
+  let prod2 = zmult(zmult(z1, z3), k1 * k3);
+  let prod3 = zmult(zmult(z2, z3), k2 * k3);
+  let inside = zadd(zadd(prod1, prod2), prod3);
+  let sqrt_inside = zsqrt(inside);
+  let secondPart = zmult(signvalue*2,sqrt_inside);
+  
+  //Suma ambas partes
+  let z4 = zadd(sum, secondPart);
+  
+  //División escalar k4
+  return [z4[0] / k4, z4[1] / k4];
+}
+
+function zadd(z1,z2){
+  return [z1[0] + z2[0] , z1[1] + z2[1]];
+}
+
+function zsub(z2,z1){
+  return [z2[0] - z1[0] , z2[1] - z1[1]];
+}
+
+function zmult(z1,z2){
+  
+  if (typeof z1 === 'number') {
+    return [z1*z2[0], z1*z2[1]];
+  }else if (typeof z2 === 'number') {
+    return [z2*z1[0], z2*z1[1]];
+  }
+  
+  let a = z1[0];
+  let b = z1[1];
+  let c = z2[0];
+  let d = z2[1];
+  
+  return [a*c-b*d,a*d+b*c];
+}
+
+function zdiv(z1, z2) {
+  let denom = z2[0] * z2[0] + z2[1] * z2[1];
+  return [
+    (z1[0] * z2[0] + z1[1] * z2[1]) / denom,
+    (z1[1] * z2[0] - z1[0] * z2[1]) / denom
+  ];
+}
+
+function zconj(z) {
+  return [z[0], -z[1]];
+}
+
+function zabs(z) {
+  return Math.sqrt(z[0] * z[0] + z[1] * z[1]);
+}
+
+function znorm(z) {
+  return Math.sqrt(z[0] * z[0] + z[1] * z[1]);
+}
+
+function zarg(z) {
+  return Math.atan2(z[1], z[0]);
+}
+
+function zsqrt(z) {
+  let r = zabs(z);
+  let theta = zarg(z);
+  let sqrt_r = Math.sqrt(r);
+  return [
+    sqrt_r * Math.cos(theta / 2),
+    sqrt_r * Math.sin(theta / 2)
+  ];
+}
+
+function zexp(z) {
+  let exp_a = Math.exp(z[0]);
+  return [ exp_a * Math.cos(z[1]), exp_a * Math.sin(z[1])];
+}
+
+function zlog(z) {
+  
+  return [ Math.log(zabs(z)), zarg(z)];
+}
+
+function zsin(z) {
+  return [ Math.sin(z[0]) * Math.cosh(z[1]), Math.cos(z[0]) * Math.sinh(z[1])];
+}
+
+function zcos(z) {
+  return [ Math.cos(z[0]) * Math.cosh(z[1]), -Math.sin(z[0]) * Math.sinh(z[1]) ];
+}
+
+
+
+
+//config functions
+function prefconfig(){
+  
+  translate (width/2.0, height/2.0);
+  applyMatrix (scaleX*(1.0/wzoom) + wscaleoffset[0], 0.0 , 
+               0.0 , -scaleY*(1.0/wzoom) + wscaleoffset[1],
+               0.0 , 0.0 );
+  translate(-wcamera[0],-wcamera[1]);
+  //scale(wzoom);
+  
+  return;
+}
+
+function initconfig(){
+  
+  return;
+}
+
+function updateconfig (){
+  
+  //background(colorBackground);
+  mx =   map (mouseX, 0,width, -width/(2*scaleX), width/(2*scaleX));
+  my =  -map (mouseY, 0,height, -height/(2*scaleY) , height/(2*scaleY));
+  pmx =   map (pmouseX, 0,width, -width/(2*scaleX), width/(2*scaleX));
+  pmy =  -map (pmouseY, 0,height, -height/(2*scaleY) , height/(2*scaleY) );
+  
+  prefconfig();
+  TIME = millis()/1000.0;
+  
+  return;
+}
+
+function hud (){ 
+  
+  textAlign(LEFT);
+  textSize(16.0);
+  fill(colorHUD);
+  noStroke();
+  text(nfc(frameRate(),2)+" fps", width - 80, 20.0);
+  text("time: "+nfc(millis()/1000.0,2.0)+"s", 10 , 20.0);
+  
+  return;
+}
+
+
+//utils functions
+function daxis(lx,ly){
+  
+  let x = 0;
+  let y = 0;
+  //let lx = 32;
+  //let ly = 32;
+  
+  let thicknessLine = 0.008;
+  let thicknessPoint = 0.02;
+  let colorNeg = '#E4EBF4';
+  let col = '#FFFFFF';
+  let colx = '#C03548';
+  let coly = '#4EAB30';
+  
+  //X
+  stroke(col); //'#C03548'
+  strokeWeight (thicknessPoint);
+  //point(x+lx/2.0,0.0);
+ 
+  strokeWeight (thicknessLine);
+  line(x-lx/2.0,y,  x+lx/2.0,y);
+  
+  
+  stroke(colorNeg);
+  strokeWeight (thicknessPoint);
+  //point(x-lx/2.0,0.0);
+  //point(x+lx/2.0,0.0);
+  
+  
+  //Y
+  stroke(col); //'#4EAB30'
+  strokeWeight (thicknessPoint);
+  //point(0.0,y+ly/2.0);
+ 
+  strokeWeight (thicknessLine);
+  line(x,y-ly/2.0,  x,y+ly/2.0);
+  
+  stroke(colorNeg);
+  strokeWeight (thicknessPoint);
+  //point(0.0,y-ly/2.0);
+  //point(0.0,y+ly/2.0);
+  
+  // [0,0]
+  //point(0,0);
+  
+  return;
+}
+
+function dgaxis(x,y,lx,ly){
+  
+  let thicknessLine = 0.02;
+  let thicknessPoint = 0.1;
+  let colorNeg = '#E4EBF4';
+  
+  //X
+  stroke('#C03548');
+  strokeWeight (thicknessPoint);
+  point(x+lx/2.0,0.0);
+ 
+  strokeWeight (thicknessLine);
+  line(x-lx/2.0,y,  x+lx/2.0,y);
+  
+  stroke(colorNeg);
+  strokeWeight (thicknessPoint);
+  point(x-lx/2.0,0.0);
+  
+  
+  //Y
+  stroke('#4EAB30');
+  strokeWeight (thicknessPoint);
+  point(0.0,y+ly/2.0);
+ 
+  strokeWeight (thicknessLine);
+  line(x,y-ly/2.0,  x,y+ly/2.0);
+  
+  stroke(colorNeg);
+  strokeWeight (thicknessPoint);
+  point(0.0,y-ly/2.0);
+  
+  // [0,0]
+  //point(0,0);
+  
+  return;
+}
+
+function dgrid(x,y, col,row, w,h, lineColor, lineThickness){
+  
+  stroke(lineColor);
+  strokeWeight(lineThickness);
+  
+  //vertical lines
+  for (let ic = -w/2.0 ; ic <= w/2.0 ; ic += w/col ){
+    line (x+ic,y+-h/2.0, x+ic , y+h/2.0);    
+  }
+  
+  //horizontal lines
+  for (let ir = -h/2.0 ; ir <= h/2.0 ; ir += h/row ){    
+    line (-w/2.0 + x , ir + y , w/2.0 + x , ir + y);
+  }
+  
+  return;
+}
+
+function dtext(s,x,y,a,b){
+  
+  push();
+  scale(a,b);
+  text(s,x,-y);
+  pop();
+  
+  return;
+}
+
+function stext(s,x,y,k){
+  
+  push();
+  scale(k,-k);
+  text(s,x,-y);
+  pop();
+  
+  return;
+}
+
+function dimage(img,x,y,s){
+  
+  push();
+  scale(s,-s);
+  image(img,x-img.width/2.0,y-img.height/2.0);
+  pop();
+  return;
+}
+
+function dq2beziercolor(p0,p1,p2,t){
+  
+  let x0 = p0[0];
+  let y0 = p0[1];
+  let z0 = p0[2];
+  
+  let x1 = p1[0];
+  let y1 = p1[1];
+  let z1 = p1[2];
+  
+  let x2 = p2[0];
+  let y2 = p2[1];
+  let z2 = p2[2];
+  
+  let q2b = (t) => [(1-t)*(1-t)*x0 + 2*(1-t)*t*x1 + t*t*x2, (1-t)*(1-t)*y0 + 2*(1-t)*t*y1 + t*t*y2, (1-t)*(1-t)*z0 + 2*(1-t)*t*z1 + t*t*z2];
+  let q0 = [0.0,0.0,0.0];
+  q0 = q2b(t);
+  
+  return q0;
+}
+
+function dpoint(p){
+  point(p[0],p[1]);
+  return;
+}
+
+function drect(p,a,b){
+  rect(p[0],p[1], a,b);
+  return;
+}
+
+function dline(p0,p1){
+  line(p0[0],p0[1], p1[0],p1[1]);
+  return;
+}
+
+function dverticalline(p,l){
+  
+  line(p[0],p[1], p[0],p[1]+l);
+
+  return;
+}
+
+function dhorizontalline(p,l){
+  
+  line(p[0],p[1], p[0]+l,p[1]);
+
+  return;
+}
+
+function dellipse(p,r1,r2){
+  
+  ellipse(p[0],p[1], 2.0*r1,2.0*r2);
+  
+}
+
+function dcircle(p,r){
+  
+  ellipse(p[0],p[1], 2.0*r,2.0*r);
+  
+  return;
+}
+
+function dvec(tail,head,arrowsize,offset){
+  
+  let l = arrowsize;
+  let o = offset;
+  let b = 0.5*(2.0/1.732050808)*l;
+  
+  let u = vnormalize(vsub(head,tail));
+  let p0 = tail;
+  
+  let nu = [-u[1],u[0]];
+  let np = vline(head,u,-l);  //lerpvec2(tail,head,1.0-l);
+  
+  /*stroke(255);
+  strokeWeight(0.008);
+  dvline(p0,u,0,1);
+  stroke(128);
+  dvline(np,nu,-5,5); */
+  
+  let p1 = head;
+  let p2 = vline(np,nu,b);
+  let p3 = vline(head,u,-l+o);  //lerpvec2(tail,head,1.0-(l-o));
+  let p4 = vline(np,nu,-b);
+  
+  //strokeWeight(0.02);
+  //dpoint(p2);
+  //dpoint(p3);
+  
+  line(tail[0], tail[1], p3[0], p3[1]);
+  
+  push();
+  noStroke();
+  beginShape();
+  dvertex(p1);
+  dvertex(p2);
+  dvertex(p3);
+  dvertex(p4);
+  endShape(CLOSE);
+  pop();
+  
+  
+  //strokeWeight(lineThickness);
+  
+  
+  return;
+}
+
+function dvertex(p){
+  
+  vertex(p[0],p[1]);
+  
+  return;
+}
+
+function rgbtohex(r,g,b) {
+  
+  let valuetohex = function (c) { let _hex = c.toString(16); return _hex; };
+  
+  return valuetohex(r) + valuetohex(g) + valuetohex(b);
+}
+
+
+//math functions
+
+function isequal(a, b, epsilon = 0.0001) {
+  return Math.abs(a - b) < epsilon;
+}
+
+function vmod(v, n) {
+    return v.map(x => x % n);
+}
+
+function vabs(a) {
+    return a.map(Math.abs);
+}
+
+function vmax(a, b) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+
+        let result = [];
+        for(let i = 0; i < a.length; i++) {
+            result[i] = Math.max(a[i], b[i]);
+        }
+        return result;
+    } else if (Array.isArray(a)) {
+
+        let result = [];
+        for(let i = 0; i < a.length; i++) {
+            result[i] = Math.max(a[i], b);
+        }
+        return result;
+    } else if (Array.isArray(b)) {
+        
+        let result = [];
+        for(let i = 0; i < b.length; i++) {
+            result[i] = Math.max(a, b[i]);
+        }
+        return result;
+    } else {
+        
+        return Math.max(a, b);
+    }
+}
+
+function vmult(a,b) {
+  
+    if (typeof a === 'number') {
+        let v = [];
+        for(let i = 0 ; i < b.length ; i++){
+          v.push(a*b[i]);
+        }
+        return v;
+    }
+  
+    if (typeof b === 'number') {
+        let v = [];
+        for(let i = 0 ; i < a.length ; i++){
+          v.push(b*a[i]);
+        }
+        return v;
+    }
+    if (typeof a === 'number' && typeof b === 'number'){      
+        return a*b;
+    }else{
+      
+      let v = [];
+      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
+          v.push(a[i]*b[i]);
+      }
+      return v;
+    }
+  
+    return [];
+}
+
+function vdiv(a,b) {
+  
+  if (typeof a === 'number') {
+        let v = [];
+        for(let i = 0 ; i < b.length ; i++){
+          v.push((1.0/a)*b[i]);
+        }
+        return v;
+  }
+  if (typeof b === 'number') {
+        let v = [];
+        for(let i = 0 ; i < a.length ; i++){
+          v.push((1.0/b)*a[i]);
+        }
+        return v;
+  }
+  if (typeof a === 'number' && typeof b === 'number'){      
+        return a/b;
+    }else{
+      
+      let v = [];
+      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
+          v.push(a[i]/b[i]);
+      }
+      return v;
+    }
+    
+   return [];
+}
+
+function vnormalize(v){
+  
+  let n = 0.0;
+  for(let i = 0 ; i < v.length ; i++){
+     n += v[i]*v[i];
+  }
+  let l = sqrt(n);
+  
+  return vmult(1.0/l,v);
+}
+
+function vadd(a,b) {
+    
+    if (typeof a === 'number') {
+        let v = [];
+        for(let i = 0 ; i < b.length ; i++){
+          v.push(a+b[i]);
+        }
+        return v;
+    }
+    if (typeof b === 'number') {
+        let v = [];
+        for(let i = 0 ; i < a.length ; i++){
+          v.push(b+a[i]);
+        }
+        return v;
+    }
+    if (typeof a === 'number' && typeof b === 'number'){      
+        return a+b;
+    }else{
+      
+      let v = [];
+      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
+          v.push(a[i]+b[i]);
+      }
+      return v;
+    }
+  
+    return [];
+}
+
+function vsub(a,b) {
+    
+    if (typeof a === 'number') {
+        let v = [];
+        for(let i = 0 ; i < b.length ; i++){
+          v.push(b[i]-a);
+        }
+        return v;
+    }
+    if (typeof b === 'number') {
+        let v = [];
+        for(let i = 0 ; i < a.length ; i++){
+          v.push(a[i]-b);
+        }
+        return v;
+    }
+    if (typeof a === 'number' && typeof b === 'number'){      
+        return a-b;
+    }else{
+      
+      let v = [];
+      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
+          v.push(a[i]-b[i]);
+      }
+      return v;
+    }
+  
+    return [];
+}
+
+function vdot(a, b) {
+    if (a.length !== b.length) {
+        throw new Error("Both vectors must be of the same length.");
+    }
+    let product = 0.0;
+    for(let i = 0; i < a.length; i++) {
+        product += a[i] * b[i];
+    }
+    return product;
+}
+
+function vcross(a, b) {
+    let c = [
+        a[1]*b[2] - a[2]*b[1],
+        a[2]*b[0] - a[0]*b[2],
+        a[0]*b[1] - a[1]*b[0]
+    ];
+    return c;
+}
+
+function vdist(a,b){
+  
+  let n = 0.0;
+  for(let i = 0 ; i < a.length && (a.length == b.length); i++){
+     n += (a[i]-b[i])*(a[i]-b[i]);
+  }
+  
+  return sqrt(n);
+}
+
+function vnorm(v){
+  
+  let n = 0.0;
+  for(let i = 0 ; i < v.length ; i++){
+     n += v[i]*v[i];
+  }
+
+  return sqrt(n);
+}
+
+function vlength(v){
+  
+  return vnorm(v);
+}
+
+function vpline(p0,p1,t){
+  
+  let u = vsub(p1,p0);
+  u = vnormalize(u);
+  
+  return vadd(p0,vmult(u,t));
+}
+
+function vline(p,u,t){
+  
+  return vadd(p,vmult(u,t));
+}
+
+function dvline(p,u,tmin,tmax){
+  
+  let di = 0.032;
+  for(let i = tmin ; i <= tmax ; i+=di){
+    
+    let p1 = vadd(p,vmult(u,i));
+    let p2 = vadd(p,vmult(u,i+di));
+    
+    line(p1[0],p1[1], p2[0],p2[1]);
+    //dline(p1,p2);
+    
+  }
+  
+  return;
+}
+
+function vflip2(v){
+  
+  return [v[1],v[0]];
+}
+
+function step(a, x) {
+    return x < a ? 0.0 : 1.0;
+}
+
+function clamp(x, minVal, maxVal) {
+    return Math.min(Math.max(x, minVal), maxVal);
+}
+
+function frac(x){
+  
+  return x - floor(x);
+}
+
+function smoothstep(edge0, edge1, x) {
+    let t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    return t * t * (3.0 - 2.0 * t);
+}
+
+function lerpnum(a,b,t){
+  return (1-t)*a + t*b;
+}
+
+function lerpvec3(p0,p1,t){
+  
+  let x0 = p0[0];
+  let y0 = p0[1];
+  let z0 = p0[2];
+  let x1 = p1[0];
+  let y1 = p1[1];
+  let z1 = p1[2];
+  
+  return [(1-t)*x0 + t*x1, (1-t)*y0 + t*y1 , (1-t)*z0 + t*z1];
+  //return [lerpnum(p0[0],p1[0],t),lerpnum(p0[1],p1[1],t),lerpnum(p0[2],p1[2],t)];
+}
+
+function lerpvec2(p0,p1,t){
+  
+  let x0 = p0[0];
+  let y0 = p0[1];
+  let x1 = p1[0];
+  let y1 = p1[1];
+
+  return [(1-t)*x0 + t*x1, (1-t)*y0 + t*y1];
+  //return [lerpnum(p0[0],p1[0],t),lerpnum(p0[1],p1[1],t),lerpnum(p0[2],p1[2],t)];
+}
+
+function arctheta(x1,y1,x2,y2){
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+    
+    if(dx == 0){return sgn(dy)*PI/2.0; }
+    
+    if (0 < dx && 0 < dy){ return acos (  dx/(sqrt(dx*dx + dy*dy))  ); }
+    if (dx <= 0 && 0 < dy ){ return acos (  dx/(sqrt(dx*dx + dy*dy))  ); }
+    if (dx < 0  && dy <= 0){ return PI + atan (dy/dx); }
+    if (0<= dx  && dy < 0 ){ return 2*PI + atan (dy/dx); }
+    return 0;
+}
+
+function arcphi(x0,y0,z0, x1,y1,z1){
+    h0 = Math.sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0));
+    h1 = Math.sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) );
+    dz = z1 - z0
+    return h1 > 0  ? (dz >= 0 ? Math.acos(h1/h0) : -Math.acos(h1/h0)): sgn(dz)*Math.PI/2.0;
+}
+
+function mod(a,b){
+  return  a-b*Math.floor(a/b);
+}
+
+function sinh(x){  
+  return (exp(x)-exp(-x))/2.0;
+}
+
+function cosh(x){  
+  return (exp(x)+exp(-x))/2.0;
+}
+
+function coth(x){  
+  return cosh(x)/sinh(x);
+}
+
+function sech(x){  
+  return 1/cosh(x);
+}
+
+function csch(x){  
+  return 1/sinh(x);
+}
+
+function tanh(x){
+  
+  return (exp(x)-exp(-x))/(exp(x)+exp(-x));
+}
+
+function tnh(x){
+  
+  let a = 8.0;
+  
+  return x <= -a ? -1.0 :  a <= x ? 1.0 : tanh(x);
+}
+
+function sigmoid(x){
+  
+  return 1.0/(1.0+exp(-x));
+}
+
+function sgm(x){
+  
+  let a = 8.0;
+  
+  return x <= -a ? 0.0 :  a <= x ? 1.0 : sigmoid(2.0*x);
+}
+
+function sgn(x){
+	return ( x < 0 ? -1 : (x > 0 ? 1 : 0) );
+}
+
+function tsn(x,min,max){
+  
+  var a = abs (min) + abs(max);
+  var p = 2.0*a;
+  var y = min; 
+  //r*sin(x/p)
+  //r*(2.0*abs( 2*( x/p - floor(x/p  + 0.75) + 0.25 )) - 1.0) ;  
+  return  a*( abs( 2*(x/p - floor(x/p  + 0.5)))) + y;  
+}
+
+function tgn(x,a,b,c){
+  
+  return c*Math.min( mod(-a*x,b), mod(a*x,b) );
+}
+
+function twa(x){
+  
+  return tsn(x,0.0,1.0);
+}
+
+
+function frustumprojection(x,y,z){
+  
+  //https://www.math3d.org/8mK4VUfXF
+  
+  let t = TIME;
+  
+  let theta = 0.0;
+  let phi = 0.0;
+  
+  let a = 0.2*t; 
+  let b = 0.5*t;
+  let c = 0.0;
+  
+  let r = 1.0; //width/height
+  
+  let Tx = 0.0;
+  let Ty = 0.0;
+  let Tz = 0.0;
+  
+  let u = (30.0)*(PI/180.0);
+  let n = -1.25;
+  let f = 100.0;
+  
+  let _x = x*cos(b)*cos(c)/(r*tan(0.5*u)) - y*cos(b)*sin(c)/(r*tan(0.5*u)) - z*sin(b)/(r*tan(0.5*u)) + Tx;
+  
+  let _y = -z*cos(b)*sin(a)/tan(0.5*u) - (cos(c)*sin(a)*sin(b) - cos(a)*sin(c))*x/tan(0.5*u) + (sin(a)*sin(b)*sin(c) + cos(a)*cos(c))*y/tan(0.5*u) + Ty;
+  
+  let _z = (f + n)*z*cos(a)*cos(b)/(f - n) + (cos(a)*cos(c)*sin(b) + sin(a)*sin(c))*(f + n)*x/(f - n) - (cos(a)*sin(b)*sin(c) - cos(c)*sin(a))*(f + n)*y/(f - n) - 2*f*n/(f - n) + Tz;
+  
+  let _w = z*cos(a)*cos(b) + (cos(a)*cos(c)*sin(b) + sin(a)*sin(c))*x - (cos(a)*sin(b)*sin(c) - cos(c)*sin(a))*y;
+  
+  
+  return [_x,_y,_z,_w];
+}
+
+function xfrt(x,y,z){
+  let vec = frustumprojection(x,y,z); 
+  let X = vec[0]/vec[2];
+  let Y = vec[1]/vec[2];
+  return X;
+}
+
+function yfrt(x,y,z){
+  let vec = frustumprojection(x,y,z); 
+  let X = vec[0]/vec[2];
+  let Y = vec[1]/vec[2];
+  return Y;
+}
+
+function dpoint3d(x,y,z){
+  
+  let vec = frustumprojection(x,y,z); 
+  let X = vec[0]/vec[2];
+  let Y = vec[1]/vec[2];
+  point(X,Y);
+  
+  return;
+}
+
+
+function twilight(t) {
+  
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [0.996106,0.851653,0.940566];
+  const c1 = [-6.529620,-0.183448,-3.940750];
+  const c2 = [40.899579,-7.894242,38.569228];
+  const c3 = [-155.212979,4.404793,-167.925730];
+  const c4 = [296.687222,24.084913,315.087856];
+  const c5 = [-261.270519,-29.995422,-266.972991];
+  const c6 = [85.335349,9.602600,85.227117];
+  
+  //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+  
+}
+
+function twilightshifted(t) {
+    
+    if (!(t >= 0.0 && t <= 1.0)){
+      t = tsn(t,0.0,1.0);    
+    }
+      
+    const c0 = [0.120488, 0.047735, 0.106111];
+    const c1 = [5.175161, 0.597944, 7.333840];
+    const c2 = [-47.426009, -0.862094, -49.143485];
+    const c3 = [197.225325, 47.538667, 194.773468];
+    const c4 = [-361.218441, -146.888121, -389.642741];
+    const c5 = [298.941929, 151.947507, 359.860766];
+    const c6 = [-92.697067, -52.312119, -123.143476];
+    //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+    return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+}
+
+function hsv(t) {
+    
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [0.834511,-0.153764,-0.139860];
+  const c1 = [8.297883,13.629371,7.673034];
+  const c2 = [-80.602944,-80.577977,-90.865764];
+  const c3 = [245.028545,291.294154,390.181844];
+  const c4 = [-376.406597,-575.667879,-714.180803];
+  const c5 = [306.639709,538.472148,596.580595];
+  const c6 = [-102.934273,-187.108098,-189.286489];
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+  
+}
+
+function afmhot(t) {
+  
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [-0.020390,0.009557,0.018508];
+  const c1 = [3.108226,-0.106297,-1.105891];
+  const c2 = [-14.539061,-2.943057,14.548595];
+  const c3 = [71.394557,22.644423,-71.418400];
+  const c4 = [-152.022488,-31.024563,152.048692];
+  const c5 = [139.593599,12.411251,-139.604042];
+  const c6 = [-46.532952,-0.000874,46.532928];
+  
+  //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+  
+}
+
+function cmrmap(t) {
+  
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [-0.046981,0.001239,0.005501];
+  const c1 = [4.080583,1.192717,3.049337];
+  const c2 = [-38.877409,1.524425,20.200215];
+  const c3 = [189.038452,-32.746447,-140.774611];
+  const c4 = [-382.197327,95.587531,270.024592];
+  const c5 = [339.891791,-100.379096,-212.471161];
+  const c6 = [-110.928480,35.828481,60.985694];
+  
+  //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+  
+  
+}
+
+function coolwarm(t) {
+  
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [0.227376,0.286898,0.752999];
+  const c1 = [1.204846,2.314886,1.563499];
+  const c2 = [0.102341,-7.369214,-1.860252];
+  const c3 = [2.218624,32.578457,-1.643751];
+  const c4 = [-5.076863,-75.374676,-3.704589];
+  const c5 = [1.336276,73.453060,9.595678];
+  const c6 = [0.694723,-25.863102,-4.558659];
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+  
+}
+
+function jet(t) {
+  
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [-0.071839,0.105300,0.510959];
+  const c1 = [3.434264,-5.856282,5.020179];
+  const c2 = [-35.088272,62.590515,-12.661725];
+  const c3 = [125.621078,-187.192678,8.399805];
+  const c4 = [-179.495111,277.458688,-26.089763];
+  const c5 = [113.825719,-218.486063,52.463600];
+  const c6 = [-27.714880,71.427477,-27.714893];
+  //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+  
+}
+
+function rainbow(t) {
+  
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [0.503560,-0.002932,1.000009];
+  const c1 = [-1.294985,3.144463,0.001872];
+  const c2 = [-16.971202,0.031355,-1.232219];
+  const c3 = [97.134102,-5.180126,-0.029721];
+  const c4 = [-172.585487,-0.338714,0.316782];
+  const c5 = [131.971426,3.514534,-0.061568];
+  const c6 = [-37.784412,-1.171512,0.003376];
+  //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+}
+
+function rdtlbu_r(t) {
+  
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [0.207621,0.196195,0.618832];
+  const c1 = [-0.088125,3.196170,-0.353302];
+  const c2 = [8.261232,-8.366855,14.368787];
+  const c3 = [-2.922476,33.244294,-43.419173];
+  const c4 = [-34.085327,-74.476041,37.159352];
+  const c5 = [50.429790,67.145621,-1.750169];
+  const c6 = [-21.188828,-20.935464,-6.501427];
+  
+  //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+  
+}
+
+function spectral_r(t) {
+  
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [0.426208,0.275203,0.563277];
+  const c1 = [-5.321958,3.761848,5.477444];
+  const c2 = [42.422339,-15.057685,-57.232349];
+  const c3 = [-100.917716,57.029463,232.590601];
+  const c4 = [106.422535,-116.177338,-437.123306];
+  const c5 = [-48.460514,103.570154,378.807920];
+  const c6 = [6.016269,-33.393152,-122.850806];
+  
+  //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+  
+}
+
+function viridis(t) {
+  
+  t = 0.0 <= t && t <= 1.0 ? t : tsn(t,0.0,1.0);
+  
+  const c0 = [0.274344,0.004462,0.331359];
+  const c1 = [0.108915,1.397291,1.388110];
+  const c2 = [-0.319631,0.243490,0.156419];
+  const c3 = [-4.629188,-5.882803,-19.646115];
+  const c4 = [6.181719,14.388598,57.442181];
+  const c5 = [4.876952,-13.955112,-66.125783];
+  const c6 = [-5.513165,4.709245,26.582180];
+  //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+  
+  return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+  
+}
+
+
+
+  </script>
+</body>
+</html>

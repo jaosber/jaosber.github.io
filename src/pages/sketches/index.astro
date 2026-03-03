@@ -1,0 +1,85 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Sketches — jaosber" description="Proyectos de simulación, visualización y algoritmos" breadcrumb={[{ label: "Sketches", href: "/sketches/" }]}>
+
+  <h1 class="page-title">Sketches</h1>
+  <p class="page-subtitle">Simulación, visualización y experimentos.</p>
+
+  <h2 class="section-title">Simulación</h2>
+
+  <p>
+    Simulaciones físicas implementadas desde cero, ecuación de onda y sistemas de partículas.
+  </p>
+
+  <figure class="media">
+    <video autoplay loop muted playsinline>
+      <source src="/sketches/sim/wave-eq-2d.mp4" type="video/mp4">
+    </video>
+    <figcaption class="media-caption">
+      Ecuación de onda en 2D — propagación de ondas en una superficie.
+    </figcaption>
+  </figure>
+
+  <figure class="media">
+    <video autoplay loop muted playsinline>
+      <source src="/sketches/sim/wave-eq-1d-string.mp4" type="video/mp4">
+    </video>
+    <figcaption class="media-caption">
+      Ecuación de onda en 1D — simulación de una cuerda vibrando.
+    </figcaption>
+  </figure>
+
+  <figure class="media">
+    <video autoplay loop muted playsinline>
+      <source src="/sketches/sim/cmass-3d.mp4" type="video/mp4">
+    </video>
+    <figcaption class="media-caption">
+      Atracción gravitacional en 3D — partículas orbitando una masa central.
+    </figcaption>
+  </figure>
+
+  <figure class="media">
+    <video autoplay loop muted playsinline>
+      <source src="/sketches/sim/cmass-2d.mp4" type="video/mp4">
+    </video>
+    <figcaption class="media-caption">
+      N-cuerpos en 2D — atracción mutua entre partículas.
+    </figcaption>
+  </figure>
+
+  <h2 class="section-title">Creative Coding</h2>
+
+  <p>
+    Visualizaciones experimententales con geometría, campos vectoriales y proyecciones.
+  </p>
+
+  <figure class="media">
+    <iframe src="/sketches/demos/descartes.html"
+    style="aspect-ratio: 16 / 9; overflow: hidden;" scrolling="no">
+    </iframe>
+    <figcaption class="media-caption">
+      Apollonian Gasket — círculos recursivos con inversión geométrica. <code>p5.js</code>
+    </figcaption>
+  </figure>
+
+  <figure class="media">
+    <iframe src="/sketches/demos/flow.html"
+    style="aspect-ratio: 16 / 9; overflow: hidden;" scrolling="no">
+    </iframe>
+    <figcaption class="media-caption">
+      Campo de flujo — partículas siguiendo ecuaciones de campos vectoriales <code>p5.js</code>
+    </figcaption>
+  </figure>
+
+  <figure class="media">
+    <iframe src="/sketches/demos/projection3d.html"
+    style="aspect-ratio: 16 / 9; overflow: hidden;" scrolling="no">
+    </iframe>
+    <figcaption class="media-caption">
+      Proyección 3D — cámara y transformaciones implementadas desde cero. <code>p5.js</code>
+    </figcaption>
+  </figure>
+
+</BaseLayout>

@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; }
+    html, body { overflow: hidden; }
+    canvas { display: block; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+</head>
+<body>
+  <script>
+   let TIME = 0.0;
+let canvas;
+let font;
+let scaleX = 100, scaleY = 100;
+let mx = 0.0 , my = 0.0;
+let pmx = 0.0 , pmy = 0.0;
+
+let colorBackground = '#0E1012'; //#1A3146
+let colorHUD = "#E5DCDC";
+let dpi = 3.0;
+
+
+let wcamera = [0.0,0.0];
+let wzoom = 1.0;
+
+
+function preload(){
+  
+  //font = loadFont('assets/fonts/Inconsolata-Regular.ttf');
+  
+  return;
+}
+
+function setup() {
+  
+  //canvas = createCanvas(920,512);//920,512
+
+  canvas = createCanvas(windowWidth, windowHeight);
+  
+  frameRate (60);
+  smooth(8.0);  
+  pixelDensity(dpi);
+  
+  //textFont(font);
+  textSize(1.0);
+  //textAlign(CENTER);
+  //rectMode (CENTER);
+  prefconfig();
+  initconfig(); 
+  
+  return;
+}
+
+function windowResized() {
+  canvas = resizeCanvas(windowWidth, windowHeight);
+}
+
+function draw() {
+  push();
+  
+  
+  let t = TIME;
+  
+  background(colorBackground);
+  background(colorBackground);
+  updateconfig();
+  
+  
+  dgrid(0,0, 1*250,1*250, 1*32,1*32, '#222223', 0.0025);
+  dgrid(0,0, 1*50,1*50, 1*32,1*32, '#3F4042', 0.0025);
+  //dgaxis(32.0,32.0);
+  
+  
+  let w = TAU;
+  let h = TAU;
+  let step = 0.2;
+
+  let fx = (u,v,a) => (5+2*cos(v))*cos(u); 
+  let fy = (u,v,a) => (5+2*cos(v))*sin(u); 
+  let fz = (u,v,a) => 2*sin(v);
+  
+  let tx = 0.0;
+  let ty = 0.0;
+  let tz = 0.0;
+  
+  let rx = 0;
+  let ry = 0;
+  let rz = 0;
+  
+  let gx = (x,y,a) => xperspective(fx(x,y,a),fy(x,y,a),fz(x,y,a), tx,ty,tz, rx,ry,rz);
+  let gy = (x,y,a) => yperspective(fx(x,y,a),fy(x,y,a),fz(x,y,a), tx,ty,tz, rx,ry,rz);
+  
+  let hx = (x,y,a) => cos(x+a)-sin(y);
+  let hy = (x,y,a) => cos(x-a)-sin(y+a);
+  
+  stroke(255);
+  strokeWeight(0.025);
+  dgridpoints(w,h,step,gx,gy,t);
+  
+  let l = 7;
+  
+  stroke(255,0,0);
+  strokeWeight(0.015);
+  dline3d(-l,0,0, l,0,0);
+  strokeWeight(0.03);
+  dpoint3d(l,0,0);
+  
+  stroke(0,255,0);
+  strokeWeight(0.015);
+  dline3d(0,-l,0, 0,l,0);
+  strokeWeight(0.03);
+  dpoint3d(0,l,0);
+  
+  stroke(0,0,255);
+  strokeWeight(0.015);
+  dline3d(0,0,-l, 0,0,l);
+  strokeWeight(0.03);
+  dpoint3d(0,0,l);
+  
+  stroke(255);
+  strokeWeight(0.035);
+  dpoint3d(0,0,0, 0,0,0);
+  
+  
+  wcamera = [0.0,0.0];
+  wzoom = 1.0;
+  
+  pop();
+  hud ();
+  return;
+}
+
+
+
+
+
+
+//config functions
+
+function prefconfig (){
+  
+  translate (width/2.0, height/2.0);
+  applyMatrix (scaleX+wzoom , 0.0 , 
+               0.0 , -scaleY-wzoom ,
+               0.0 , 0.0 );
+  translate(-wcamera[0],-wcamera[1]);
+  //scale(wzoom);
+  
+  return;
+}
+
+function initconfig (){
+  
+  
+  return;
+}
+
+function updateconfig (){
+  
+  //background(colorBackground);
+  
+  mx =   map (mouseX, 0,width, -width/(2*scaleX), width/(2*scaleX));
+  my =  -map (mouseY, 0,height, -height/(2*scaleY) , height/(2*scaleY));
+  pmx =   map (pmouseX, 0,width, -width/(2*scaleX), width/(2*scaleX));
+  pmy =  -map (pmouseY, 0,height, -height/(2*scaleY) , height/(2*scaleY) );
+  
+  prefconfig();
+  TIME = millis()/1000.0;
+  
+  return;
+}
+
+function hud (){ 
+  
+  textSize(16.0);
+  fill (colorHUD);
+  noStroke();
+  text(nfc(frameRate(),2)+" fps", width - 80, 20.0);
+  text("time: "+nfc(millis()/1000.0,2.0)+"s", 10 , 20.0);
+  
+  return;
+}
+
+
+
+
+
+
+
+
+//utils functions
+
+function dgridpoints(w,h,step,fx,fy,t){
+   
+  for (let iy = -h/2.0 ; iy < h/2.0 ; iy += step){
+    for (let ix = -w/2.0 ; ix < w/2.0 ; ix += step){
+      point(fx(ix,iy,t),fy(ix,iy,t));
+    }    
+  }
+  
+  return;
+}
+
+function dgaxis(lx,ly){
+  
+  let x = 0;
+  let y = 0;
+  //let lx = 32;
+  //let ly = 32;
+  
+  let thicknessLine = 0.008;
+  let thicknessPoint = 0.02;
+  let colorNeg = '#E4EBF4';
+  let col = '#FFFFFF';
+  let colx = '#C03548';
+  let coly = '#4EAB30';
+  
+  //X
+  stroke(col); //'#C03548'
+  strokeWeight (thicknessPoint);
+  //point(x+lx/2.0,0.0);
+ 
+  strokeWeight (thicknessLine);
+  line(x-lx/2.0,y,  x+lx/2.0,y);
+  
+  
+  stroke(colorNeg);
+  strokeWeight (thicknessPoint);
+  //point(x-lx/2.0,0.0);
+  //point(x+lx/2.0,0.0);
+  
+  
+  //Y
+  stroke(col); //'#4EAB30'
+  strokeWeight (thicknessPoint);
+  //point(0.0,y+ly/2.0);
+ 
+  strokeWeight (thicknessLine);
+  line(x,y-ly/2.0,  x,y+ly/2.0);
+  
+  stroke(colorNeg);
+  strokeWeight (thicknessPoint);
+  //point(0.0,y-ly/2.0);
+  //point(0.0,y+ly/2.0);
+  
+  // [0,0]
+  //point(0,0);
+  
+  return;
+}
+
+function daxis(x,y,lx,ly){
+  
+  let thicknessLine = 0.02;
+  let thicknessPoint = 0.1;
+  let colorNeg = '#E4EBF4';
+  
+  //X
+  stroke('#C03548');
+  strokeWeight (thicknessPoint);
+  point(x+lx/2.0,0.0);
+ 
+  strokeWeight (thicknessLine);
+  line(x-lx/2.0,y,  x+lx/2.0,y);
+  
+  stroke(colorNeg);
+  strokeWeight (thicknessPoint);
+  point(x-lx/2.0,0.0);
+  
+  
+  //Y
+  stroke('#4EAB30');
+  strokeWeight (thicknessPoint);
+  point(0.0,y+ly/2.0);
+ 
+  strokeWeight (thicknessLine);
+  line(x,y-ly/2.0,  x,y+ly/2.0);
+  
+  stroke(colorNeg);
+  strokeWeight (thicknessPoint);
+  point(0.0,y-ly/2.0);
+  
+  // [0,0]
+  //point(0,0);
+  
+  return;
+}
+
+function dgrid(x,y, col,row, w,h, lineColor, lineThickness){
+  
+  stroke(lineColor);
+  strokeWeight(lineThickness);
+  
+  //vertical lines
+  for (let ic = -w/2.0 ; ic <= w/2.0 ; ic += w/col ){
+    line (x+ic,y+-h/2.0, x+ic , y+h/2.0);    
+  }
+  
+  //horizontal lines
+  for (let ir = -h/2.0 ; ir <= h/2.0 ; ir += h/row ){    
+    line (-w/2.0 + x , ir + y , w/2.0 + x , ir + y);
+  }
+  
+  return;
+}
+
+function dtext(s,x,y){
+  
+  push();
+  scale(1.0,-1.0);
+  text(s,x,-y);
+  pop();
+  
+  return;
+}
+
+function dimage(img,x,y,s){
+  
+  push();
+  scale(s,-s);
+  image(img,x-img.width/2.0,y-img.height/2.0);
+  pop();
+  return;
+}
+
+function dq2beziercolor(p0,p1,p2,t){
+  
+  let x0 = p0[0];
+  let y0 = p0[1];
+  let z0 = p0[2];
+  
+  let x1 = p1[0];
+  let y1 = p1[1];
+  let z1 = p1[2];
+  
+  let x2 = p2[0];
+  let y2 = p2[1];
+  let z2 = p2[2];
+  
+  let q2b = (t) => [(1-t)*(1-t)*x0 + 2*(1-t)*t*x1 + t*t*x2, (1-t)*(1-t)*y0 + 2*(1-t)*t*y1 + t*t*y2, (1-t)*(1-t)*z0 + 2*(1-t)*t*z1 + t*t*z2];
+  let q0 = [0.0,0.0,0.0];
+  q0 = q2b(t);
+  
+  return q0;
+}
+
+function dpoint(p){
+  point(p[0],p[1]);
+  return;
+}
+
+function drect(p,a,b){
+  rect(p[0],p[1], a,b);
+  return;
+}
+
+function dline(p0,p1){
+  line(p0[0],p0[1], p1[0],p1[1]);
+  return;
+}
+
+function dverticalline(p,l){
+  
+  line(p[0],p[1], p[0],p[1]+l);
+
+  return;
+}
+
+function dhorizontalline(p,l){
+  
+  line(p[0],p[1], p[0]+l,p[1]);
+
+  return;
+}
+
+function dellipse(p,r1,r2){
+  
+  ellipse(p[0],p[1], 2.0*r1,2.0*r2);
+  
+}
+
+function dcircle(p,r){
+  
+  ellipse(p[0],p[1], 2.0*r,2.0*r);
+  
+  return;
+}
+
+function dvector(tail,head,arrowSize){
+  
+  let x1 = tail[0];
+  let y1 = tail[1];
+  let x2 = head[0];
+  let y2 = head[1];
+    
+  //strokeWeight(lineThickness);
+  
+  line(x1, y1, x2, y2);
+  let dx = x2 - x1;
+  let dy = y2 - y1;
+  let len = sqrt(dx * dx + dy * dy);
+  dx /= len;
+  dy /= len;
+  
+  let x3 = x2 - arrowSize * dx - arrowSize * 0.5 * dy;
+  let y3 = y2 - arrowSize * dy + arrowSize * 0.5 * dx;
+  
+  let x4 = x2 - arrowSize * dx + arrowSize * 0.5 * dy;
+  let y4 = y2 - arrowSize * dy - arrowSize * 0.5 * dx;
+  //fill(0);
+  triangle(x2, y2, x3, y3, x4, y4);
+  return;
+}
+
+function dvec(tail,head,arrowsize,offset){
+  
+  let l = arrowsize;
+  let o = offset;
+  let b = 0.5*(2.0/1.732050808)*l;
+  
+  
+  let u = vnormalize(vsub(head,tail));
+  let p0 = tail;
+  
+
+  let nu = [-u[1],u[0]];
+  let np = vline(head,u,-l);  //lerpvec2(tail,head,1.0-l);
+  
+  /*stroke(255);
+  strokeWeight(0.008);
+  dvline(p0,u,0,1);
+  stroke(128);
+  dvline(np,nu,-5,5); */
+  
+  let p1 = head;
+  let p2 = vline(np,nu,b);
+  let p3 = vline(head,u,-l+o);  //lerpvec2(tail,head,1.0-(l-o));
+  let p4 = vline(np,nu,-b);
+  
+  //strokeWeight(0.02);
+  //dpoint(p2);
+  //dpoint(p3);
+  
+  line(tail[0], tail[1], p3[0], p3[1]);
+  
+  push();
+  noStroke();
+  beginShape();
+  dvertex(p1);
+  dvertex(p2);
+  dvertex(p3);
+  dvertex(p4);
+  endShape(CLOSE);
+  pop();
+  
+  
+  //strokeWeight(lineThickness);
+  
+  
+  return;
+}
+
+function dvertex(p){
+  
+  vertex(p[0],p[1]);
+  
+  return;
+}
+
+function dcurve(fx,fy,tmin,tmax,dt){
+  
+  let x0 = 0.0;
+  let y0 = 0.0;
+  let x1 = 0.0;
+  let y1 = 0.0;
+  
+  let _x1 = null;
+  let _y1 = null;
+  
+  let step = dt; //0.032
+  
+  for(let it = tmin ; it < tmax ; it += step){
+        
+      x0 = fx(it);
+      y0 = fy(it);
+      
+      if(_x1 != null & _y1 != null){
+        line(x0,y0,_x1,_y1);
+      }
+      
+      it += step;
+        
+      if(it > tmax){
+          x1 = fx(tmax);
+          y1 = fy(tmax);
+          line(x0,y0,x1,y1);
+          break;
+      }else{
+          x1 = fx(it);
+          y1 = fy(it);
+          _x1 = x1;
+          _y1 = y1;
+      }
+      
+      line(x0,y0,x1,y1);
+  }
+  
+  return;
+}
+
+function dvecline(p0,p1){
+  
+  let di = 0.1;
+  let l = 2*PI;
+  
+  for(let i = -l+di ; i < l ; i+=di){
+    
+    let p_0 = vline(p0,p1,i);
+    //i+=di;
+    let p_1 = vline(p0,p1,i+di);
+    
+    //stroke(32);
+    //strokeWeight(0.02);
+    dline(p_0,p_1);
+  }
+  
+  return;
+}
+
+function gridpoint(w,h,tx,ty){
+  
+  let di = 0.1;
+  
+  let ih = map(tx,0,1, -h/2.0, h/2.0 );
+  let iw = map(ty,0,1, -w/2.0, w/2.0 );
+  
+  for (let iy = ih ; iy < h/2.0 ; iy += di){
+    for (let ix = iw ; ix < w/2.0 ; ix += di){
+      return [iy,ix];
+    }    
+  }
+  
+  return;
+}
+
+function dgridpoint(w,h,step){
+  
+  let q = 0.0;
+  
+  if(mod(w,step) != 0 || mod(h,step) != 0 ){
+    q = step;
+  }
+  
+  for (let iy = 0.0 ; iy <= h/2.0 + q; iy += step){
+    for (let ix = 0.0 ; ix <= w/2.0 + q ; ix += step){
+            
+      point(ix,iy);
+      point(-ix,iy);
+      point(-ix,-iy);
+      point(ix,-iy);
+      
+    }    
+  }
+  
+  return;
+}
+
+function dfunction (fx,fy,tmin,tmax, xmin,xmax, ymin,ymax, tstep,tscale){
+  
+  let x0 = 0.0;
+  let y0 = 0.0;
+  let x1 = 0.0;
+  let y1 = 0.0;
+  
+  for(let it = tmin ; it < tmax-tstep ; it += tstep){
+    
+    x0 = fx(it)*tscale;
+    y0 = fy(it)*tscale;
+    
+    x1 = fx(it+tstep)*tscale;
+    y1 = fy(it+tstep)*tscale;
+    
+    let c0 = (xmin <= x0 && x0 <= xmax) && (ymin <= y0 && y0 <= ymax);
+    let c1 = (xmin <= x1 && x1 <= xmax) && (ymin <= y1 && y1 <= ymax);
+    
+    if( c0 && c1 ){
+      line(x0,y0, x1,y1);
+    }
+    
+  }
+  
+  
+  return;
+}
+
+
+//math functions
+
+function vmod(v, n) {
+    return v.map(x => x % n);
+}
+
+function vabs(a) {
+    return a.map(Math.abs);
+}
+
+function vmax(a, b) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+
+        let result = [];
+        for(let i = 0; i < a.length; i++) {
+            result[i] = Math.max(a[i], b[i]);
+        }
+        return result;
+    } else if (Array.isArray(a)) {
+
+        let result = [];
+        for(let i = 0; i < a.length; i++) {
+            result[i] = Math.max(a[i], b);
+        }
+        return result;
+    } else if (Array.isArray(b)) {
+        
+        let result = [];
+        for(let i = 0; i < b.length; i++) {
+            result[i] = Math.max(a, b[i]);
+        }
+        return result;
+    } else {
+        
+        return Math.max(a, b);
+    }
+}
+
+function vmult(a,b) {
+  
+    if (typeof a === 'number') {
+        let v = [];
+        for(let i = 0 ; i < b.length ; i++){
+          v.push(a*b[i]);
+        }
+        return v;
+    }
+    if (typeof b === 'number') {
+        let v = [];
+        for(let i = 0 ; i < a.length ; i++){
+          v.push(b*a[i]);
+        }
+        return v;
+    }
+    if (typeof a === 'number' && typeof b === 'number'){      
+        return a*b;
+    }else{
+      
+      let v = [];
+      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
+          v.push(a[i]*b[i]);
+      }
+      return v;
+    }
+  
+    return [];
+}
+
+function vdiv(a,b) {
+  
+  if (typeof a === 'number') {
+        let v = [];
+        for(let i = 0 ; i < b.length ; i++){
+          v.push((1.0/a)*b[i]);
+        }
+        return v;
+  }
+  if (typeof b === 'number') {
+        let v = [];
+        for(let i = 0 ; i < a.length ; i++){
+          v.push((1.0/b)*a[i]);
+        }
+        return v;
+  }
+  if (typeof a === 'number' && typeof b === 'number'){      
+        return a/b;
+    }else{
+      
+      let v = [];
+      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
+          v.push(a[i]/b[i]);
+      }
+      return v;
+    }
+    
+   return [];
+}
+
+function vnormalize(v){
+  
+  let n = 0.0;
+  for(let i = 0 ; i < v.length ; i++){
+     n += v[i]*v[i];
+  }
+  let l = sqrt(n);
+  
+  return vmult(1.0/l,v);
+}
+
+function vadd(a,b) {
+    
+    if (typeof a === 'number') {
+        let v = [];
+        for(let i = 0 ; i < b.length ; i++){
+          v.push(a+b[i]);
+        }
+        return v;
+    }
+    if (typeof b === 'number') {
+        let v = [];
+        for(let i = 0 ; i < a.length ; i++){
+          v.push(b+a[i]);
+        }
+        return v;
+    }
+    if (typeof a === 'number' && typeof b === 'number'){      
+        return a+b;
+    }else{
+      
+      let v = [];
+      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
+          v.push(a[i]+b[i]);
+      }
+      return v;
+    }
+  
+    return [];
+}
+
+function vsub(a,b) {
+    
+    if (typeof a === 'number') {
+        let v = [];
+        for(let i = 0 ; i < b.length ; i++){
+          v.push(b[i]-a);
+        }
+        return v;
+    }
+    if (typeof b === 'number') {
+        let v = [];
+        for(let i = 0 ; i < a.length ; i++){
+          v.push(a[i]-b);
+        }
+        return v;
+    }
+    if (typeof a === 'number' && typeof b === 'number'){      
+        return a-b;
+    }else{
+      
+      let v = [];
+      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
+          v.push(a[i]-b[i]);
+      }
+      return v;
+    }
+  
+    return [];
+}
+
+function vdot(a, b) {
+    if (a.length !== b.length) {
+        throw new Error("Both vectors must be of the same length.");
+    }
+    let product = 0.0;
+    for(let i = 0; i < a.length; i++) {
+        product += a[i] * b[i];
+    }
+    return product;
+}
+
+function vcross(a, b) {
+    let c = [
+        a[1]*b[2] - a[2]*b[1],
+        a[2]*b[0] - a[0]*b[2],
+        a[0]*b[1] - a[1]*b[0]
+    ];
+    return c;
+}
+
+function vdist(a,b){
+  
+  let n = 0.0;
+  for(let i = 0 ; i < a.length && (a.length == b.length); i++){
+     n += (a[i]-b[i])*(a[i]-b[i]);
+  }
+  
+  return sqrt(n);
+}
+
+function vnorm(v){
+  
+  let n = 0.0;
+  for(let i = 0 ; i < v.length ; i++){
+     n += v[i]*v[i];
+  }
+
+  return sqrt(n);
+}
+
+function vlength(v){
+  
+  return vnorm(v);
+}
+
+function vpline(p0,p1,t){
+  
+  let u = vsub(p1,p0);
+  u = vnormalize(u);
+  
+  return vadd(p0,vmult(u,t));
+}
+
+function vline(p,u,t){
+  
+  return vadd(p,vmult(u,t));
+}
+
+function dvline(p,u,tmin,tmax){
+  
+  let di = 0.032;
+  for(let i = tmin ; i <= tmax ; i+=di){
+    
+    let p1 = vadd(p,vmult(u,i));
+    let p2 = vadd(p,vmult(u,i+di));
+    
+    line(p1[0],p1[1], p2[0],p2[1]);
+    //dline(p1,p2);
+    
+  }
+  
+  return;
+}
+
+function vflip2(v){
+  
+  return [v[1],v[0]];
+}
+
+function twilightshifted(t) {
+    
+    if (!(t >= 0.0 && t <= 1.0)){
+      t = tsn(t,0.0,1.0);    
+    }
+      
+    const c0 = [0.120488, 0.047735, 0.106111];
+    const c1 = [5.175161, 0.597944, 7.333840];
+    const c2 = [-47.426009, -0.862094, -49.143485];
+    const c3 = [197.225325, 47.538667, 194.773468];
+    const c4 = [-361.218441, -146.888121, -389.642741];
+    const c5 = [298.941929, 151.947507, 359.860766];
+    const c6 = [-92.697067, -52.312119, -123.143476];
+    //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+    return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
+}
+
+function step(a, x) {
+    return x < a ? 0.0 : 1.0;
+}
+
+function clamp(x, minVal, maxVal) {
+    return Math.min(Math.max(x, minVal), maxVal);
+}
+
+function frac(x){
+  
+  return x - floor(x);
+}
+
+function smoothstep(edge0, edge1, x) {
+    let t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    return t * t * (3.0 - 2.0 * t);
+}
+
+function lerpnum(a,b,t){
+  return (1-t)*a + t*b;
+}
+
+function lerpvec3(p0,p1,t){
+  
+  let x0 = p0[0];
+  let y0 = p0[1];
+  let z0 = p0[2];
+  let x1 = p1[0];
+  let y1 = p1[1];
+  let z1 = p1[2];
+  
+  return [(1-t)*x0 + t*x1, (1-t)*y0 + t*y1 , (1-t)*z0 + t*z1];
+  //return [lerpnum(p0[0],p1[0],t),lerpnum(p0[1],p1[1],t),lerpnum(p0[2],p1[2],t)];
+}
+
+function lerpvec2(p0,p1,t){
+  
+  let x0 = p0[0];
+  let y0 = p0[1];
+  let x1 = p1[0];
+  let y1 = p1[1];
+
+  return [(1-t)*x0 + t*x1, (1-t)*y0 + t*y1];
+  //return [lerpnum(p0[0],p1[0],t),lerpnum(p0[1],p1[1],t),lerpnum(p0[2],p1[2],t)];
+}
+
+function arctheta(x1,y1,x2,y2){
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+    
+    if(dx == 0){return sgn(dy)*PI/2.0; }
+    
+    if (0 < dx && 0 < dy){ return acos (  dx/(sqrt(dx*dx + dy*dy))  ); }
+    if (dx <= 0 && 0 < dy ){ return acos (  dx/(sqrt(dx*dx + dy*dy))  ); }
+    if (dx < 0  && dy <= 0){ return PI + atan (dy/dx); }
+    if (0<= dx  && dy < 0 ){ return 2*PI + atan (dy/dx); }
+    return 0;
+}
+
+function arcphi(x0,y0,z0, x1,y1,z1){
+    h0 = Math.sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0));
+    h1 = Math.sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) );
+    dz = z1 - z0
+    return h1 > 0  ? (dz >= 0 ? Math.acos(h1/h0) : -Math.acos(h1/h0)): sgn(dz)*Math.PI/2.0;
+}
+
+function mod(a,b){
+  return  a-b*Math.floor(a/b);
+}
+
+function sinh(x){  
+  return (exp(x)-exp(-x))/2.0;
+}
+
+function cosh(x){  
+  return (exp(x)+exp(-x))/2.0;
+}
+
+function coth(x){  
+  return cosh(x)/sinh(x);
+}
+
+function sech(x){  
+  return 1/cosh(x);
+}
+
+function csch(x){  
+  return 1/sinh(x);
+}
+
+function tanh(x){
+  
+  return (exp(x)-exp(-x))/(exp(x)+exp(-x));
+}
+
+function tnh(x){
+  
+  let a = 8.0;
+  
+  return x <= -a ? -1.0 :  a <= x ? 1.0 : tanh(x);
+}
+
+function sigmoid(x){
+  
+  return 1.0/(1.0+exp(-x));
+}
+
+function sgm(x){
+  
+  let a = 8.0;
+  
+  return x <= -a ? 0.0 :  a <= x ? 1.0 : sigmoid(2.0*x);
+}
+
+function sgn(x){
+	return ( x < 0 ? -1 : (x > 0 ? 1 : 0) );
+}
+
+function tsn(x,min,max){
+  
+  //Vec3DeepLoop365!
+  var a = abs (min) + abs(max);
+  var p = 2.0*a;
+  var y = min; 
+  
+  //r*sin(x/p)
+  //r*(2.0*abs( 2*( x/p - floor(x/p  + 0.75) + 0.25 )) - 1.0) ;  
+    
+  return  a*( abs( 2*(x/p - floor(x/p  + 0.5)))) + y;  
+}
+
+function tgn(x,a,b,c){
+  
+  return c*Math.min( mod(-a*x,b), mod(a*x,b) );
+}
+
+function twa(x){
+  
+  return tsn(x,0.0,1.0);
+}
+
+
+let camera3d = {
+  pos: [0,0,0],
+  rot: [0,0,0]
+};
+
+function setcamera(){
+  
+  
+  
+  return;
+}
+
+function vprojection(px,py,pz, tx,ty,tz, rx,ry,rz, aspect, fov, znear, zfar){
+  
+  //perspective projection
+  
+  let x = px;
+  let y = py;
+  let z = pz;
+  
+  let X = tx;
+  let Y = ty;
+  let Z = tz;
+  
+  let a = rx;
+  let b = ry;
+  let c = rz;
+  
+  let s = aspect;
+  let o = fov;
+  let n = znear;
+  let f = zfar;
+  
+  px =  1.0*x*cos(b)*cos(c)/(s*tan(0.5*o)) - 1.0*y*cos(b)*sin(c)/(s*tan(0.5*o)) - 1.0*z*sin(b)/(s*tan(0.5*o)) + X;
+  py =  -1.0*z*cos(b)*sin(a)/tan(0.50*o) - 1.0*(cos(c)*sin(a)*sin(b) - cos(a)*sin(c))*x/tan(0.5*o) + 1.0*(sin(a)*sin(b)*sin(c) + cos(a)*cos(c))*y/tan(0.5*o) + Y;
+  pz =  -(f + n)*z*cos(a)*cos(b)/(f - n) - (cos(a)*cos(c)*sin(b) + sin(a)*sin(c))*(f + n)*x/(f - n) + (cos(a)*sin(b)*sin(c) - cos(c)*sin(a))*(f + n)*y/(f - n) - 2.0*f*n/(f - n) + Z;
+  let pw =  -z*cos(a)*cos(b) - (cos(a)*cos(c)*sin(b) + sin(a)*sin(c))*x + (cos(a)*sin(b)*sin(c) - cos(c)*sin(a))*y + 1 ;
+  
+  return [px,py,pz,pw];
+
+}
+
+function vperspective(px,py,pz, tx,ty,tz, rx,ry,rz){
+  
+  //perspective projection
+  
+  //point
+  let x = px;
+  let y = py;
+  let z = pz;
+  
+  //translate
+  let X = tx; 
+  let Y = ty;
+  let Z = tz;
+  
+  //scale
+  let s = 1.0;
+  
+  //rotation
+  let a = rx-PI/3.0; 
+  let b = ry;
+  let c = rz+PI-TIME*0.35;
+  
+  let aspr = 1.0; //aspect ratio
+  let o = 60*(PI/180.0); //fov
+  let n = 5.0;   //znear
+  let f = 500.0; //zfar
+  
+  let vec = vprojection(px*s,py*s,-pz*s, tx,ty,tz, a,b,c, aspr, o, n, f);
+  
+  return vec;
+
+}
+
+
+function xperspective(x,y,z, tx,ty,tz, rx,ry,rz){
+  
+  let vec = vperspective(x,y,z, tx,ty,tz, rx,ry,rz); 
+  let X = vec[0]/vec[2];
+  //let Y = vec[1]/vec[2];
+  return X;
+}
+
+function yperspective(x,y,z, tx,ty,tz, rx,ry,rz){
+  
+  let vec = vperspective(x,y,z, tx,ty,tz, rx,ry,rz); 
+  //let X = vec[0]/vec[2];
+  let Y = vec[1]/vec[2];
+  return Y;
+}
+
+function dpoint3d(x,y,z){
+  
+  let p = vperspective(x,y,z, 0,0,0, 0,0,0); 
+  point(p[0]/p[2], p[1]/p[2]);
+  
+  return;
+}
+
+function dline3d(x1,y1,z1, x2,y2,z2){
+  
+  let p1 = vperspective(x1,y1,z1, 0,0,0, 0,0,0);
+  let p2 = vperspective(x2,y2,z2, 0,0,0, 0,0,0);
+  
+  line(p1[0]/p1[2], p1[1]/p1[2],
+       p2[0]/p2[2], p2[1]/p2[2],);
+  
+  return;
+}
+
+
+
+    
+
+
+  </script>
+</body>
+</html>

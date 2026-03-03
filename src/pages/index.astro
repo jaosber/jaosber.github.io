@@ -1,17 +1,29 @@
 ---
-
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="jaosber" description="Curiosidad por los algoritmos, la física y las matemáticas visuales." showTagline={true}>
+
+  <p>
+    Mi nombre es Jaime. Me gusta entender cómo funcionan las cosas desde algoritmos hasta fenómenos físicos.
+  </p>
+
+  <p>
+    Estudio ingeniería de sistemas y computación. Me interesan los gráficos por computador, la simulación, y el punto donde las matemáticas se vuelven visuales. En ocasiones escribo sobre lo que voy descubriendo.
+  </p>
+
+  <p>
+    También me fascina la ciencia ficción, la complejidad de los chips que aún no comprendo del todo, y el universo en general que sigue pareciéndome misterioso. <span class="cursor-blink"></span>
+  </p> 
+
+  <ul>
+    <li><a href="resume/jbcv.pdf" target="_blank">CV</a></li>
+    <!-- <li><a href="https://linkedin.com/in/usuario" target="_blank">LinkedIn</a></li> -->
+    <!-- <li><a href="jaimeoscarvs@gmail.com">Contacto</a></li> -->
+  </ul>
+
+
+</div>
+
+
+</BaseLayout>
