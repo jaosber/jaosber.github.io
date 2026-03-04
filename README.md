@@ -1,8 +1,12 @@
 # jaosber.github.io
 
-Web personal. Construido con [Astro](https://astro.build).
+Personal site — projects, algorithms and topics that catch my attention.
 
-## Desarrollo
+**[jaosber.github.io](https://jaosber.github.io)**
+
+Built with [Astro](https://astro.build). Design inspired by [Bear Blog](https://github.com/HermanMartinus/bearblog/) and [jekyllBear](https://github.com/knhash/jekyllBear).
+
+## Development
 
 ```sh
 npm install
@@ -11,4 +15,4 @@ npm run dev
 
 ## Deploy
 
-Push a `main` — GitHub Actions compila y despliega automáticamente.
+Push to `main` — GitHub Actions builds and deploys automatically.
