@@ -1,10 +1,10 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Proyectos — jaosber" description="IoT, aprendizaje automático, compiladores y más" breadcrumb={[{ label: "proyectos", href: "/projects/" }]}>
+<BaseLayout title="Proyectos — jaosber" description="IoT, aprendizaje automático, webs, compiladores y más" breadcrumb={[{ label: "proyectos", href: "/projects/" }]}>
   
   <h1 class="page-title">Proyectos</h1>
-  <p class="page-subtitle">IoT, aprendizaje automático, compiladores y más.</p>
+  <p class="page-subtitle">IoT, aprendizaje automático, webs, compiladores y más.</p>
 
   <h2 class="section-title">IoT y Sistemas Embebidos</h2>
   <ul class="post-list">
@@ -27,6 +27,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <li><a href="https://github.com/jaosber/mlp-latin-char-recognition" target="_blank">
       <span class="post-date">Python · Keras · Java</span>
       <span class="post-title">Reconocimiento de Caracteres — Red neuronal entrenada con 2700 fuentes</span>
+    </a></li>
+  </ul>
+
+  <h2 class="section-title">Web</h2>
+  <ul class="post-list">
+    <li><a href="https://github.com/jaosber/djangochatwebsocket" target="_blank">
+      <span class="post-date">Python · Django · Redis · WebSocket</span>
+      <span class="post-title">Chat en Tiempo Real — Sala de chat con Django y WebSockets</span>
     </a></li>
   </ul>
 
@@ -58,12 +66,5 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     </a></li>
   </ul>
 
-  <h2 class="section-title">Web</h2>
-  <ul class="post-list">
-    <li><a href="https://github.com/jaosber/djangochatwebsocket" target="_blank">
-      <span class="post-date">Python · Django · Redis · WebSocket</span>
-      <span class="post-title">Chat en Tiempo Real — Sala de chat con Django y WebSockets</span>
-    </a></li>
-  </ul>
 
 </BaseLayout>
