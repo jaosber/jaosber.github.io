@@ -1,1125 +1,1868 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <style>
-    * { margin: 0; padding: 0; }
-    html, body { overflow: hidden; }
-    canvas { display: block; }
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
 </head>
+
 <body>
   <script>
-   let TIME = 0.0;
-let canvas;
-let font;
-let scaleX = 100, scaleY = 100;
-let mx = 0.0 , my = 0.0;
-let pmx = 0.0 , pmy = 0.0;
 
-let colorBackground = '#0E1012'; //#1A3146
-let colorHUD = "#E5DCDC";
-let dpi = 3.0;
+    let TIME = 0.0;
+    let canvas;
+    let scaleX = 100, scaleY = 100;
+
+    let colorBackground = '#0E1012'; //#1A3146
+    let colorHUD = "#E5DCDC";
+    let dpi = 3.0;
 
 
-let wcamera = [0.0,0.0];
-let wzoom = 1.0;
+    let wcamera = [0.0, 0.0];
+    let wrotate = 0.0;
+    let wzoom = 1.0;
+
+    let cam = {
+      target: [0, 0, 0],
+      distance: 10.0,
+      theta: 0.0,
+      phi: 3.14159265 / 6.0,
+      fov: 50.0       // degrees
+    };
+
+    function preload() {
+
+      //nothing
+
+      return;
+    }
+
+    function setup() {
+
+      //canvas = createCanvas(1080,620);
+      canvas = resizeCanvas(windowWidth, windowHeight);
+
+      frameRate(60);
+      smooth(8.0);
+      pixelDensity(dpi);
+
+      textSize(1.0);
+      //textAlign(CENTER);
+      //rectMode (CENTER);
+      prefconfig();
+      initconfig();
+
+      return;
+    }
+
+    function windowResized() {
+      canvas = resizeCanvas(windowWidth, windowHeight);
+    }
+
+    function draw() {
+      push();
 
 
-function preload(){
-  
-  //font = loadFont('assets/fonts/Inconsolata-Regular.ttf');
-  
-  return;
-}
+      let t = TIME;
 
-function setup() {
-  
-  //canvas = createCanvas(920,512);//920,512
-
-  canvas = createCanvas(windowWidth, windowHeight);
-  
-  frameRate (60);
-  smooth(8.0);  
-  pixelDensity(dpi);
-  
-  //textFont(font);
-  textSize(1.0);
-  //textAlign(CENTER);
-  //rectMode (CENTER);
-  prefconfig();
-  initconfig(); 
-  
-  return;
-}
-
-function windowResized() {
-  canvas = resizeCanvas(windowWidth, windowHeight);
-}
-
-function draw() {
-  push();
-  
-  
-  let t = TIME;
-  
-  background(colorBackground);
-  background(colorBackground);
-  updateconfig();
-  
-  
-  dgrid(0,0, 1*250,1*250, 1*32,1*32, '#222223', 0.0025);
-  dgrid(0,0, 1*50,1*50, 1*32,1*32, '#3F4042', 0.0025);
-  //dgaxis(32.0,32.0);
-  
-  
-  let w = TAU;
-  let h = TAU;
-  let step = 0.2;
-
-  let fx = (u,v,a) => (5+2*cos(v))*cos(u); 
-  let fy = (u,v,a) => (5+2*cos(v))*sin(u); 
-  let fz = (u,v,a) => 2*sin(v);
-  
-  let tx = 0.0;
-  let ty = 0.0;
-  let tz = 0.0;
-  
-  let rx = 0;
-  let ry = 0;
-  let rz = 0;
-  
-  let gx = (x,y,a) => xperspective(fx(x,y,a),fy(x,y,a),fz(x,y,a), tx,ty,tz, rx,ry,rz);
-  let gy = (x,y,a) => yperspective(fx(x,y,a),fy(x,y,a),fz(x,y,a), tx,ty,tz, rx,ry,rz);
-  
-  let hx = (x,y,a) => cos(x+a)-sin(y);
-  let hy = (x,y,a) => cos(x-a)-sin(y+a);
-  
-  stroke(255);
-  strokeWeight(0.025);
-  dgridpoints(w,h,step,gx,gy,t);
-  
-  let l = 7;
-  
-  stroke(255,0,0);
-  strokeWeight(0.015);
-  dline3d(-l,0,0, l,0,0);
-  strokeWeight(0.03);
-  dpoint3d(l,0,0);
-  
-  stroke(0,255,0);
-  strokeWeight(0.015);
-  dline3d(0,-l,0, 0,l,0);
-  strokeWeight(0.03);
-  dpoint3d(0,l,0);
-  
-  stroke(0,0,255);
-  strokeWeight(0.015);
-  dline3d(0,0,-l, 0,0,l);
-  strokeWeight(0.03);
-  dpoint3d(0,0,l);
-  
-  stroke(255);
-  strokeWeight(0.035);
-  dpoint3d(0,0,0, 0,0,0);
-  
-  
-  wcamera = [0.0,0.0];
-  wzoom = 1.0;
-  
-  pop();
-  hud ();
-  return;
-}
+      background(colorBackground);
+      updateconfig();
 
 
+      //dgrid(0,0, 1*250,1*250, 1*32,1*32, '#222223', 0.0025);
+      //dgrid(0,0, 1*50,1*50, 1*32,1*32, '#3F4042', 0.0025);
+      //dgaxis(32.0,32.0);
+
+      spherecam(0, 0, 0, 11, 3 * PI / 2 + 0.45 * cos(1.25 * t), 0.45 * sin(1.25 * t) + 0.2);
+
+      cam.fov = 30 + 0 * cos(t);
 
 
+      let w = TAU + 0.3;
+      let h = TAU + 0.3;
+      let step = 0.2;
+
+      let tx = 0.0;
+      let ty = 0.0;
+      let tz = 0.0;
+
+      let rx = 0;
+      let ry = 0;
+      let rz = 0;
+
+      //torus
+      let rfx = (u, v, a) => (3 + 1 * cos(v)) * cos(u);
+      let rfy = (u, v, a) => (3 + 1 * cos(v)) * sin(u);
+      let rfz = (u, v, a) => 1 * sin(v);
+
+      let fx = (u, v, a) => rotation3d(rfx(u, v, a), rfy(u, v, a), rfz(u, v, a), 1.1 * t, 0, 1.5 * t)[0];
+      let fy = (u, v, a) => rotation3d(rfx(u, v, a), rfy(u, v, a), rfz(u, v, a), 1.1 * t, 0, 1.5 * t)[1];
+      let fz = (u, v, a) => rotation3d(rfx(u, v, a), rfy(u, v, a), rfz(u, v, a), 1.1 * t, 0, 1.5 * t)[2];
+
+      //sphere
+      let rgx = (u, v, a) => 4 * cos(v) * cos(u);
+      let rgy = (u, v, a) => 4 * cos(v) * sin(u);
+      let rgz = (u, v, a) => 4 * sin(v);
+
+      let gx = (u, v, a) => rotation3d(rgx(u, v, a), rgy(u, v, a), rgz(u, v, a), 1.1 * t, 0, 1.5 * t)[0];
+      let gy = (u, v, a) => rotation3d(rgx(u, v, a), rgy(u, v, a), rgz(u, v, a), 1.1 * t, 0, 1.5 * t)[1];
+      let gz = (u, v, a) => rotation3d(rgx(u, v, a), rgy(u, v, a), rgz(u, v, a), 1.1 * t, 0, 1.5 * t)[2];
 
 
-//config functions
+      //plane
+      let wx = (u, v, a) => u * 0 + u * cos(-a * 0.5) - v * sin(-a * 0.5);
+      let wy = (u, v, a) => v * 0 + u * sin(-a * 0.5) + v * cos(-a * 0.5);
+      let wz = (u, v, a) => 0;
 
-function prefconfig (){
-  
-  translate (width/2.0, height/2.0);
-  applyMatrix (scaleX+wzoom , 0.0 , 
-               0.0 , -scaleY-wzoom ,
-               0.0 , 0.0 );
-  translate(-wcamera[0],-wcamera[1]);
-  //scale(wzoom);
-  
-  return;
-}
+      //some function xy
+      let nx = (u, v, a) => u * 0 + u * cos(-a * 1.25) - v * sin(-a * 1.25);
+      let ny = (u, v, a) => v * 0 + u * sin(-a * 1.25) + v * cos(-a * 1.25);
+      let nz = (u, v, a) => 1.5 * cos(0.8 * u + 3 * a) * sin(0.8 * v + 3 * a);
 
-function initconfig (){
-  
-  
-  return;
-}
+      //cube
 
-function updateconfig (){
-  
-  //background(colorBackground);
-  
-  mx =   map (mouseX, 0,width, -width/(2*scaleX), width/(2*scaleX));
-  my =  -map (mouseY, 0,height, -height/(2*scaleY) , height/(2*scaleY));
-  pmx =   map (pmouseX, 0,width, -width/(2*scaleX), width/(2*scaleX));
-  pmy =  -map (pmouseY, 0,height, -height/(2*scaleY) , height/(2*scaleY) );
-  
-  prefconfig();
-  TIME = millis()/1000.0;
-  
-  return;
-}
+      let gmax = (x, y, z) => max(abs(x), max(abs(y), abs(z)));
 
-function hud (){ 
-  
-  textSize(16.0);
-  fill (colorHUD);
-  noStroke();
-  text(nfc(frameRate(),2)+" fps", width - 80, 20.0);
-  text("time: "+nfc(millis()/1000.0,2.0)+"s", 10 , 20.0);
-  
-  return;
-}
+      let mx = (u, v, a) => (3 * cos(v) * cos(u)) / gmax(1 * cos(v) * cos(u), 1 * cos(v) * sin(u), 1 * sin(v));
+      let my = (u, v, a) => (3 * cos(v) * sin(u)) / gmax(1 * cos(v) * cos(u), 1 * cos(v) * sin(u), 1 * sin(v));
+      let mz = (u, v, a) => (3 * sin(v)) / gmax(1 * cos(v) * cos(u), 1 * cos(v) * sin(u), 1 * sin(v));
+
+      let fxx = (x, y, a) => xperspective(fx(x, y, a), fy(x, y, a), fz(x, y, a), tx, ty, tz, rx, ry, rz);
+      let fyy = (x, y, a) => yperspective(fx(x, y, a), fy(x, y, a), fz(x, y, a), tx, ty, tz, rx, ry, rz);
+
+      let gxx = (x, y, a) => xperspective(gx(x, y, a), gy(x, y, a), gz(x, y, a), tx, ty, tz, rx, ry, rz);
+      let gyy = (x, y, a) => yperspective(gx(x, y, a), gy(x, y, a), gz(x, y, a), tx, ty, tz, rx, ry, rz);
+
+      let wxx = (x, y, a) => xperspective(wx(x, y, a), wy(x, y, a), wz(x, y, a), tx, ty, tz, rx, ry, rz);
+      let wyy = (x, y, a) => yperspective(wx(x, y, a), wy(x, y, a), wz(x, y, a), tx, ty, tz, rx, ry, rz);
+
+      let nxx = (x, y, a) => xperspective(nx(x, y, a), ny(x, y, a), nz(x, y, a), tx, ty, tz, rx, ry, rz);
+      let nyy = (x, y, a) => yperspective(nx(x, y, a), ny(x, y, a), nz(x, y, a), tx, ty, tz, rx, ry, rz);
+
+      let mxx = (x, y, a) => xperspective(mx(x, y, a), my(x, y, a), mz(x, y, a), tx, ty, tz, rx, ry, rz);
+      let myy = (x, y, a) => yperspective(mx(x, y, a), my(x, y, a), mz(x, y, a), tx, ty, tz, rx, ry, rz);
+
+
+      let t0 = sgm(8 * sin(0.75 * t - 0.5 * PI));
+      let t1 = sgm(6 * sin(0.85 * t - 0.25 * PI));
+
+      let hx = (x, y, a) => lerpnum(lerpnum(nxx(x, y, a), gxx(x, y, a), t0), fxx(x, y, a), t1);
+      let hy = (x, y, a) => lerpnum(lerpnum(nyy(x, y, a), gyy(x, y, a), t0), fyy(x, y, a), t1);
+
+
+      let lx = (x, y, a) => cos(x + a) - sin(y);
+      let ly = (x, y, a) => cos(x - a) - sin(y + a);
+
+      //dgrid3d(0,0,0,0,0,0, 50,50, 10,10, '#4C4C4C', 0.0025);
+      //dgrid3d(0,0,0,0,0,0, 10,10, 10,10, '#878787', 0.0025);
+
+
+      dgrid3d(0, 0, 5, 0, 0, 0, 50, 50, 10, 10, '#4C4C4C', 0.0025);
+      dgrid3d(0, 0, 5, 0, 0, 0, 10, 10, 10, 10, '#878787', 0.0025);
+
+      dgrid3d(0, 0, -5, 0, 0, 0, 50, 50, 10, 10, '#4C4C4C', 0.0025);
+      dgrid3d(0, 0, -5, 0, 0, 0, 10, 10, 10, 10, '#878787', 0.0025);
+
+      dgrid3d(0, 0, -5, 0, PI / 2, 0, 50, 50, 10, 10, '#4C4C4C', 0.0025);
+      dgrid3d(0, 0, -5, 0, PI / 2, 0, 10, 10, 10, 10, '#878787', 0.0025);
+
+      //dgrid3d(0,0,5, 0,PI/2,0, 50,50, 10,10, '#4C4C4C', 0.0025);
+      //dgrid3d(0,0,5, 0,PI/2,0, 10,10, 10,10, '#878787', 0.0025);
+
+      dgrid3d(0, 0, 5, PI / 2, 0, 0, 50, 50, 10, 10, '#4C4C4C', 0.0025);
+      dgrid3d(0, 0, 5, PI / 2, 0, 0, 10, 10, 10, 10, '#878787', 0.0025);
+
+      dgrid3d(0, 0, -5, PI / 2, 0, 0, 50, 50, 10, 10, '#4C4C4C', 0.0025);
+      dgrid3d(0, 0, -5, PI / 2, 0, 0, 10, 10, 10, 10, '#878787', 0.0025);
 
 
 
+      stroke(255);
+      strokeWeight(0.01);
+      //dgridpoints(w,h,step,hx,hy,t);
+
+
+      hx = (x, y, a)     => lerpnum(fx(x, y, a), nx(x, y, a), t0);
+      hy = (x, y, a)     => lerpnum(fy(x, y, a), ny(x, y, a), t0);
+      let hz = (x, y, a) => lerpnum(fz(x, y, a), nz(x, y, a), t0);
+
+
+      //dgridplane3d(w,h,step,hx,hy,hz, t);
+
+      dgridplane3dcolor(w, h, step, hx, hy, hz, t, (t) => vmult(viridis(t), 255), 1);
+
+      /*fill(255,255,0);
+      stroke(255,255,0);
+      strokeWeight(0.015);
+      dvector([0,0],[2*cos(t),2*sin(t)],0.1); */
+
+      stroke(255, 80, 80);
+      strokeWeight(0.015);
+      fill(255, 80, 80);
+      //dvec3d([0,0,0], [3*cos(t),3*sin(t),cos(t)], 0.15, 0.12);
+
+      let l = 5;
+
+      //z
+      stroke(0, 0, 255);
+      strokeWeight(0.015);
+      dline3d(0, 0, -l, 0, 0, l);
+      strokeWeight(0.03);
+      dpoint3d(0, 0, l);
+
+      //x
+      stroke(255, 0, 0);
+      strokeWeight(0.015);
+      dline3d(-l, 0, 0, l, 0, 0);
+      strokeWeight(0.03);
+      dpoint3d(l, 0, 0);
+
+      //y
+      stroke(0, 255, 0);
+      strokeWeight(0.015);
+      dline3d(0, -l, 0, 0, l, 0);
+      strokeWeight(0.03);
+      dpoint3d(0, l, 0);
+
+
+      stroke(255);
+      strokeWeight(0.035);
+      dpoint3d(0, 0, 0, 0, 0, 0);
+
+      stroke(255);
+      strokeWeight(0.01);
+
+      let lg = 10;
+      dcube(lg, lg, lg, 0, 0, 0, 0, 0, 0);
+
+      wcamera = [0.0, 0.0];
+      wrotate = 0;
+      wzoom = 1.5 + 0.0 * cos(t * 2.5);
+
+      pop();
+      hud();
+      return;
+    }
 
 
 
 
 
-//utils functions
 
-function dgridpoints(w,h,step,fx,fy,t){
-   
-  for (let iy = -h/2.0 ; iy < h/2.0 ; iy += step){
-    for (let ix = -w/2.0 ; ix < w/2.0 ; ix += step){
-      point(fx(ix,iy,t),fy(ix,iy,t));
-    }    
-  }
-  
-  return;
-}
+    //config functions
 
-function dgaxis(lx,ly){
-  
-  let x = 0;
-  let y = 0;
-  //let lx = 32;
-  //let ly = 32;
-  
-  let thicknessLine = 0.008;
-  let thicknessPoint = 0.02;
-  let colorNeg = '#E4EBF4';
-  let col = '#FFFFFF';
-  let colx = '#C03548';
-  let coly = '#4EAB30';
-  
-  //X
-  stroke(col); //'#C03548'
-  strokeWeight (thicknessPoint);
-  //point(x+lx/2.0,0.0);
- 
-  strokeWeight (thicknessLine);
-  line(x-lx/2.0,y,  x+lx/2.0,y);
-  
-  
-  stroke(colorNeg);
-  strokeWeight (thicknessPoint);
-  //point(x-lx/2.0,0.0);
-  //point(x+lx/2.0,0.0);
-  
-  
-  //Y
-  stroke(col); //'#4EAB30'
-  strokeWeight (thicknessPoint);
-  //point(0.0,y+ly/2.0);
- 
-  strokeWeight (thicknessLine);
-  line(x,y-ly/2.0,  x,y+ly/2.0);
-  
-  stroke(colorNeg);
-  strokeWeight (thicknessPoint);
-  //point(0.0,y-ly/2.0);
-  //point(0.0,y+ly/2.0);
-  
-  // [0,0]
-  //point(0,0);
-  
-  return;
-}
+    function prefconfig() {
 
-function daxis(x,y,lx,ly){
-  
-  let thicknessLine = 0.02;
-  let thicknessPoint = 0.1;
-  let colorNeg = '#E4EBF4';
-  
-  //X
-  stroke('#C03548');
-  strokeWeight (thicknessPoint);
-  point(x+lx/2.0,0.0);
- 
-  strokeWeight (thicknessLine);
-  line(x-lx/2.0,y,  x+lx/2.0,y);
-  
-  stroke(colorNeg);
-  strokeWeight (thicknessPoint);
-  point(x-lx/2.0,0.0);
-  
-  
-  //Y
-  stroke('#4EAB30');
-  strokeWeight (thicknessPoint);
-  point(0.0,y+ly/2.0);
- 
-  strokeWeight (thicknessLine);
-  line(x,y-ly/2.0,  x,y+ly/2.0);
-  
-  stroke(colorNeg);
-  strokeWeight (thicknessPoint);
-  point(0.0,y-ly/2.0);
-  
-  // [0,0]
-  //point(0,0);
-  
-  return;
-}
+      translate(width / 2.0, height / 2.0);
+      applyMatrix(scaleX * (1.0 / wzoom), 0.0,
+        0.0, -scaleY * (1.0 / wzoom),
+        0.0, 0.0);
+      rotate(wrotate);
+      translate(-wcamera[0], -wcamera[1]);
+      //scale(wzoom);
 
-function dgrid(x,y, col,row, w,h, lineColor, lineThickness){
-  
-  stroke(lineColor);
-  strokeWeight(lineThickness);
-  
-  //vertical lines
-  for (let ic = -w/2.0 ; ic <= w/2.0 ; ic += w/col ){
-    line (x+ic,y+-h/2.0, x+ic , y+h/2.0);    
-  }
-  
-  //horizontal lines
-  for (let ir = -h/2.0 ; ir <= h/2.0 ; ir += h/row ){    
-    line (-w/2.0 + x , ir + y , w/2.0 + x , ir + y);
-  }
-  
-  return;
-}
+      return;
+    }
 
-function dtext(s,x,y){
-  
-  push();
-  scale(1.0,-1.0);
-  text(s,x,-y);
-  pop();
-  
-  return;
-}
+    function initconfig() {
 
-function dimage(img,x,y,s){
-  
-  push();
-  scale(s,-s);
-  image(img,x-img.width/2.0,y-img.height/2.0);
-  pop();
-  return;
-}
 
-function dq2beziercolor(p0,p1,p2,t){
-  
-  let x0 = p0[0];
-  let y0 = p0[1];
-  let z0 = p0[2];
-  
-  let x1 = p1[0];
-  let y1 = p1[1];
-  let z1 = p1[2];
-  
-  let x2 = p2[0];
-  let y2 = p2[1];
-  let z2 = p2[2];
-  
-  let q2b = (t) => [(1-t)*(1-t)*x0 + 2*(1-t)*t*x1 + t*t*x2, (1-t)*(1-t)*y0 + 2*(1-t)*t*y1 + t*t*y2, (1-t)*(1-t)*z0 + 2*(1-t)*t*z1 + t*t*z2];
-  let q0 = [0.0,0.0,0.0];
-  q0 = q2b(t);
-  
-  return q0;
-}
+      return;
+    }
 
-function dpoint(p){
-  point(p[0],p[1]);
-  return;
-}
+    function updateconfig() {
 
-function drect(p,a,b){
-  rect(p[0],p[1], a,b);
-  return;
-}
+      //background(colorBackground);
 
-function dline(p0,p1){
-  line(p0[0],p0[1], p1[0],p1[1]);
-  return;
-}
+      prefconfig();
+      TIME = millis() / 1000.0;
 
-function dverticalline(p,l){
-  
-  line(p[0],p[1], p[0],p[1]+l);
+      return;
+    }
 
-  return;
-}
+    function hud() {
 
-function dhorizontalline(p,l){
-  
-  line(p[0],p[1], p[0]+l,p[1]);
+      textSize(16.0);
+      fill(colorHUD);
+      noStroke();
+      text(nfc(frameRate(), 2) + " fps", width - 80, 20.0);
+      text("time: " + nfc(millis() / 1000.0, 2.0) + "s", 10, 20.0);
 
-  return;
-}
+      return;
+    }
 
-function dellipse(p,r1,r2){
-  
-  ellipse(p[0],p[1], 2.0*r1,2.0*r2);
-  
-}
 
-function dcircle(p,r){
-  
-  ellipse(p[0],p[1], 2.0*r,2.0*r);
-  
-  return;
-}
 
-function dvector(tail,head,arrowSize){
-  
-  let x1 = tail[0];
-  let y1 = tail[1];
-  let x2 = head[0];
-  let y2 = head[1];
-    
-  //strokeWeight(lineThickness);
-  
-  line(x1, y1, x2, y2);
-  let dx = x2 - x1;
-  let dy = y2 - y1;
-  let len = sqrt(dx * dx + dy * dy);
-  dx /= len;
-  dy /= len;
-  
-  let x3 = x2 - arrowSize * dx - arrowSize * 0.5 * dy;
-  let y3 = y2 - arrowSize * dy + arrowSize * 0.5 * dx;
-  
-  let x4 = x2 - arrowSize * dx + arrowSize * 0.5 * dy;
-  let y4 = y2 - arrowSize * dy - arrowSize * 0.5 * dx;
-  //fill(0);
-  triangle(x2, y2, x3, y3, x4, y4);
-  return;
-}
 
-function dvec(tail,head,arrowsize,offset){
-  
-  let l = arrowsize;
-  let o = offset;
-  let b = 0.5*(2.0/1.732050808)*l;
-  
-  
-  let u = vnormalize(vsub(head,tail));
-  let p0 = tail;
-  
+    //utils functions
 
-  let nu = [-u[1],u[0]];
-  let np = vline(head,u,-l);  //lerpvec2(tail,head,1.0-l);
-  
-  /*stroke(255);
-  strokeWeight(0.008);
-  dvline(p0,u,0,1);
-  stroke(128);
-  dvline(np,nu,-5,5); */
-  
-  let p1 = head;
-  let p2 = vline(np,nu,b);
-  let p3 = vline(head,u,-l+o);  //lerpvec2(tail,head,1.0-(l-o));
-  let p4 = vline(np,nu,-b);
-  
-  //strokeWeight(0.02);
-  //dpoint(p2);
-  //dpoint(p3);
-  
-  line(tail[0], tail[1], p3[0], p3[1]);
-  
-  push();
-  noStroke();
-  beginShape();
-  dvertex(p1);
-  dvertex(p2);
-  dvertex(p3);
-  dvertex(p4);
-  endShape(CLOSE);
-  pop();
-  
-  
-  //strokeWeight(lineThickness);
-  
-  
-  return;
-}
+    function dgridpoints(w, h, step, fx, fy, t) {
 
-function dvertex(p){
-  
-  vertex(p[0],p[1]);
-  
-  return;
-}
-
-function dcurve(fx,fy,tmin,tmax,dt){
-  
-  let x0 = 0.0;
-  let y0 = 0.0;
-  let x1 = 0.0;
-  let y1 = 0.0;
-  
-  let _x1 = null;
-  let _y1 = null;
-  
-  let step = dt; //0.032
-  
-  for(let it = tmin ; it < tmax ; it += step){
-        
-      x0 = fx(it);
-      y0 = fy(it);
-      
-      if(_x1 != null & _y1 != null){
-        line(x0,y0,_x1,_y1);
+      for (let iy = -h / 2.0; iy < h / 2.0; iy += step) {
+        for (let ix = -w / 2.0; ix < w / 2.0; ix += step) {
+          point(fx(ix, iy, t), fy(ix, iy, t));
+        }
       }
-      
-      it += step;
-        
-      if(it > tmax){
+
+      return;
+    }
+
+    function dgridplane3d(w, h, step, fxt, fyt, fzt, t) {
+
+      let x1 = 0, y1 = 0, z1 = 0;
+
+      let x2 = 0, y2 = 0, z2 = 0;
+
+      for (let iy = -h / 2.0; iy <= h / 2.0; iy += step) {
+        for (let ix = -w / 2.0; ix <= w / 2.0; ix += step) {
+
+          x1 = fxt(ix, iy, t);
+          y1 = fyt(ix, iy, t);
+          z1 = fzt(ix, iy, t);
+
+          x2 = fxt(ix + step, iy, t);
+          y2 = fyt(ix + step, iy, t);
+          z2 = fzt(ix + step, iy, t);
+
+          if (ix + step <= w * 0.5) dline3d(x1, y1, z1, x2, y2, z2);
+
+
+          x2 = fxt(ix, iy + step, t);
+          y2 = fyt(ix, iy + step, t);
+          z2 = fzt(ix, iy + step, t);
+
+          if (iy + step <= h * 0.5) dline3d(x1, y1, z1, x2, y2, z2);
+
+        }
+      }
+
+      return
+    }
+
+
+    function surfaceNormal(fxt, fyt, fzt, u, v, t) {
+
+      let eps = 0.001;
+
+      // ∂S/∂u via central differences
+      let dux = (fxt(u + eps, v, t) - fxt(u - eps, v, t)) / (2 * eps);
+      let duy = (fyt(u + eps, v, t) - fyt(u - eps, v, t)) / (2 * eps);
+      let duz = (fzt(u + eps, v, t) - fzt(u - eps, v, t)) / (2 * eps);
+
+      // ∂S/∂v via central differences
+      let dvx = (fxt(u, v + eps, t) - fxt(u, v - eps, t)) / (2 * eps);
+      let dvy = (fyt(u, v + eps, t) - fyt(u, v - eps, t)) / (2 * eps);
+      let dvz = (fzt(u, v + eps, t) - fzt(u, v - eps, t)) / (2 * eps);
+
+      // N = ∂S/∂u × ∂S/∂v
+      let nx = duy * dvz - duz * dvy;
+      let ny = duz * dvx - dux * dvz;
+      let nz = dux * dvy - duy * dvx;
+
+      let len = Math.sqrt(nx * nx + ny * ny + nz * nz) + 1e-12;
+
+      return [nx / len, ny / len, nz / len];
+    }
+
+
+
+
+    // Mode 0: Normal direction mapped to colormap
+    //   dot(normal, lightDir) simulates diffuse lighting
+    function colorFromNormal(nx, ny, nz) {
+      // Light direction (upper-right-front, normalized)
+      let lx = 0.57, ly = 0.57, lz = 0.57;
+      let dot = nx * lx + ny * ly + nz * lz;
+      // Remap [-1, 1] → [0, 1]
+      return dot * 0.5 + 0.5;
+    }
+
+    // Mode 1: Height (z-value) mapped to colormap
+    function colorFromHeight(z, zmin, zmax) {
+      return (z - zmin) / (zmax - zmin + 1e-12);
+    }
+
+    // Mode 2: Parameter position (UV gradient)
+    function colorFromUV(u, v, umin, umax, vmin, vmax) {
+      let tu = (u - umin) / (umax - umin);
+      let tv = (v - vmin) / (vmax - vmin);
+      return tu * 0.7 + tv * 0.3; // blend both
+    }
+
+    // Mode 3: Gaussian curvature approximation (advanced)
+    //   High curvature = bright, flat = dark
+    function colorFromCurvature(fxt, fyt, fzt, u, v, t) {
+      let eps = 0.01;
+      let n0 = surfaceNormal(fxt, fyt, fzt, u, v, t);
+      let nu = surfaceNormal(fxt, fyt, fzt, u + eps, v, t);
+      let nv = surfaceNormal(fxt, fyt, fzt, u, v + eps, t);
+      // How fast the normal changes ≈ curvature
+      let dnux = nu[0] - n0[0], dnuy = nu[1] - n0[1], dnuz = nu[2] - n0[2];
+      let dnvx = nv[0] - n0[0], dnvy = nv[1] - n0[1], dnvz = nv[2] - n0[2];
+      let ku = Math.sqrt(dnux * dnux + dnuy * dnuy + dnuz * dnuz) / eps;
+      let kv = Math.sqrt(dnvx * dnvx + dnvy * dnvy + dnvz * dnvz) / eps;
+      let k = (ku + kv) * 0.5;
+      // Compress with tanh for nice [0,1] mapping
+      return Math.tanh(k * 0.5);
+    }
+
+    function dgridplane3dcolor(w, h, step, fxt, fyt, fzt, t, cmapFn, colorMode) {
+
+      // Default to viridis + normal coloring
+      cmapFn = cmapFn || viridis;
+      colorMode = colorMode || 0;
+
+      let umin = -w / 2.0, umax = w / 2.0;
+      let vmin = -h / 2.0, vmax = h / 2.0;
+
+      // Precompute z range for height mode
+      let zmin = Infinity, zmax = -Infinity;
+      if (colorMode === 1) {
+        for (let iv = vmin; iv <= vmax; iv += step * 3) {
+          for (let iu = umin; iu <= umax; iu += step * 3) {
+            let z = fzt(iu, iv, t);
+            if (z < zmin) zmin = z;
+            if (z > zmax) zmax = z;
+          }
+        }
+      }
+
+      for (let iy = vmin; iy <= vmax; iy += step) {
+        for (let ix = umin; ix <= umax; ix += step) {
+
+          let x1 = fxt(ix, iy, t);
+          let y1 = fyt(ix, iy, t);
+          let z1 = fzt(ix, iy, t);
+
+          // Compute color scalar
+          let scalar = 0.0;
+          if (colorMode === 0) {
+            let n = surfaceNormal(fxt, fyt, fzt, ix, iy, t);
+            scalar = colorFromNormal(n[0], n[1], n[2]);
+          } else if (colorMode === 1) {
+            scalar = colorFromHeight(z1, zmin, zmax);
+          } else if (colorMode === 2) {
+            scalar = colorFromUV(ix, iy, umin, umax, vmin, vmax);
+          } else if (colorMode === 3) {
+            scalar = colorFromCurvature(fxt, fyt, fzt, ix, iy, t);
+          }
+
+          //scalar = map(ix, umin, umax, 0,1);
+          let col = cmapFn(scalar);
+          stroke(col[0], col[1], col[2]);
+
+          // Horizontal edge
+          let x2 = fxt(ix + step, iy, t);
+          let y2 = fyt(ix + step, iy, t);
+          let z2 = fzt(ix + step, iy, t);
+          if (ix + step <= umax) dline3d(x1, y1, z1, x2, y2, z2);
+
+          // Vertical edge
+          x2 = fxt(ix, iy + step, t);
+          y2 = fyt(ix, iy + step, t);
+          z2 = fzt(ix, iy + step, t);
+          if (iy + step <= vmax) dline3d(x1, y1, z1, x2, y2, z2);
+        }
+      }
+    }
+
+
+    function dgaxis(lx, ly) {
+
+      let x = 0;
+      let y = 0;
+      //let lx = 32;
+      //let ly = 32;
+
+      let thicknessLine = 0.008;
+      let thicknessPoint = 0.02;
+      let colorNeg = '#E4EBF4';
+      let col = '#FFFFFF';
+      let colx = '#C03548';
+      let coly = '#4EAB30';
+
+      //X
+      stroke(col); //'#C03548'
+      strokeWeight(thicknessPoint);
+      //point(x+lx/2.0,0.0);
+
+      strokeWeight(thicknessLine);
+      line(x - lx / 2.0, y, x + lx / 2.0, y);
+
+
+      stroke(colorNeg);
+      strokeWeight(thicknessPoint);
+      //point(x-lx/2.0,0.0);
+      //point(x+lx/2.0,0.0);
+
+
+      //Y
+      stroke(col); //'#4EAB30'
+      strokeWeight(thicknessPoint);
+      //point(0.0,y+ly/2.0);
+
+      strokeWeight(thicknessLine);
+      line(x, y - ly / 2.0, x, y + ly / 2.0);
+
+      stroke(colorNeg);
+      strokeWeight(thicknessPoint);
+      //point(0.0,y-ly/2.0);
+      //point(0.0,y+ly/2.0);
+
+      // [0,0]
+      //point(0,0);
+
+      return;
+    }
+
+    function daxis(x, y, lx, ly) {
+
+      let thicknessLine = 0.02;
+      let thicknessPoint = 0.1;
+      let colorNeg = '#E4EBF4';
+
+      //X
+      stroke('#C03548');
+      strokeWeight(thicknessPoint);
+      point(x + lx / 2.0, 0.0);
+
+      strokeWeight(thicknessLine);
+      line(x - lx / 2.0, y, x + lx / 2.0, y);
+
+      stroke(colorNeg);
+      strokeWeight(thicknessPoint);
+      point(x - lx / 2.0, 0.0);
+
+
+      //Y
+      stroke('#4EAB30');
+      strokeWeight(thicknessPoint);
+      point(0.0, y + ly / 2.0);
+
+      strokeWeight(thicknessLine);
+      line(x, y - ly / 2.0, x, y + ly / 2.0);
+
+      stroke(colorNeg);
+      strokeWeight(thicknessPoint);
+      point(0.0, y - ly / 2.0);
+
+      // [0,0]
+      //point(0,0);
+
+      return;
+    }
+
+    function dgrid(x, y, col, row, w, h, lineColor, lineThickness) {
+
+      stroke(lineColor);
+      strokeWeight(lineThickness);
+
+      //vertical lines
+      for (let ic = -w / 2.0; ic <= w / 2.0; ic += w / col) {
+        line(x + ic, y + -h / 2.0, x + ic, y + h / 2.0);
+      }
+
+      //horizontal lines
+      for (let ir = -h / 2.0; ir <= h / 2.0; ir += h / row) {
+        line(-w / 2.0 + x, ir + y, w / 2.0 + x, ir + y);
+      }
+
+      return;
+    }
+
+    function dtext(s, x, y) {
+
+      push();
+      scale(1.0, -1.0);
+      text(s, x, -y);
+      pop();
+
+      return;
+    }
+
+    function dimage(img, x, y, s) {
+
+      push();
+      scale(s, -s);
+      image(img, x - img.width / 2.0, y - img.height / 2.0);
+      pop();
+      return;
+    }
+
+    function dq2beziercolor(p0, p1, p2, t) {
+
+      let x0 = p0[0];
+      let y0 = p0[1];
+      let z0 = p0[2];
+
+      let x1 = p1[0];
+      let y1 = p1[1];
+      let z1 = p1[2];
+
+      let x2 = p2[0];
+      let y2 = p2[1];
+      let z2 = p2[2];
+
+      let q2b = (t) => [(1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * x1 + t * t * x2, (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * y1 + t * t * y2, (1 - t) * (1 - t) * z0 + 2 * (1 - t) * t * z1 + t * t * z2];
+      let q0 = [0.0, 0.0, 0.0];
+      q0 = q2b(t);
+
+      return q0;
+    }
+
+    function dpoint(p) {
+      point(p[0], p[1]);
+      return;
+    }
+
+    function drect(p, a, b) {
+      rect(p[0], p[1], a, b);
+      return;
+    }
+
+    function dline(p0, p1) {
+      line(p0[0], p0[1], p1[0], p1[1]);
+      return;
+    }
+
+    function dverticalline(p, l) {
+
+      line(p[0], p[1], p[0], p[1] + l);
+
+      return;
+    }
+
+    function dhorizontalline(p, l) {
+
+      line(p[0], p[1], p[0] + l, p[1]);
+
+      return;
+    }
+
+    function dellipse(p, r1, r2) {
+
+      ellipse(p[0], p[1], 2.0 * r1, 2.0 * r2);
+
+    }
+
+    function dcircle(p, r) {
+
+      ellipse(p[0], p[1], 2.0 * r, 2.0 * r);
+
+      return;
+    }
+
+    function dvector(tail, head, arrowSize) {
+
+      let x1 = tail[0];
+      let y1 = tail[1];
+      let x2 = head[0];
+      let y2 = head[1];
+
+      //strokeWeight(lineThickness);
+
+      line(x1, y1, x2, y2);
+      let dx = x2 - x1;
+      let dy = y2 - y1;
+      let len = sqrt(dx * dx + dy * dy);
+      dx /= len;
+      dy /= len;
+
+      let x3 = x2 - arrowSize * dx - arrowSize * 0.5 * dy;
+      let y3 = y2 - arrowSize * dy + arrowSize * 0.5 * dx;
+
+      let x4 = x2 - arrowSize * dx + arrowSize * 0.5 * dy;
+      let y4 = y2 - arrowSize * dy - arrowSize * 0.5 * dx;
+      //fill(0);
+      triangle(x2, y2, x3, y3, x4, y4);
+      return;
+    }
+
+    function dvec(tail, head, arrowsize, offset) {
+
+      let l = arrowsize;
+      let o = offset;
+      let b = 0.5 * (2.0 / 1.732050808) * l;
+
+
+      let u = vnormalize(vsub(head, tail));
+      let p0 = tail;
+
+
+      let nu = [-u[1], u[0]];
+      let np = vline(head, u, -l);  //lerpvec2(tail,head,1.0-l);
+
+      /*stroke(255);
+      strokeWeight(0.008);
+      dvline(p0,u,0,1);
+      stroke(128);
+      dvline(np,nu,-5,5); */
+
+      let p1 = head;
+      let p2 = vline(np, nu, b);
+      let p3 = vline(head, u, -l + o);  //lerpvec2(tail,head,1.0-(l-o));
+      let p4 = vline(np, nu, -b);
+
+      //strokeWeight(0.02);
+      //dpoint(p2);
+      //dpoint(p3);
+
+      line(tail[0], tail[1], p3[0], p3[1]);
+
+      push();
+      noStroke();
+      beginShape();
+      dvertex(p1);
+      dvertex(p2);
+      dvertex(p3);
+      dvertex(p4);
+      endShape(CLOSE);
+      pop();
+
+
+      //strokeWeight(lineThickness);
+
+
+      return;
+    }
+
+    function dvertex(p) {
+
+      vertex(p[0], p[1]);
+
+      return;
+    }
+
+    function dcurve(fx, fy, tmin, tmax, dt) {
+
+      let x0 = 0.0;
+      let y0 = 0.0;
+      let x1 = 0.0;
+      let y1 = 0.0;
+
+      let _x1 = null;
+      let _y1 = null;
+
+      let step = dt; //0.032
+
+      for (let it = tmin; it < tmax; it += step) {
+
+        x0 = fx(it);
+        y0 = fy(it);
+
+        if (_x1 != null & _y1 != null) {
+          line(x0, y0, _x1, _y1);
+        }
+
+        it += step;
+
+        if (it > tmax) {
           x1 = fx(tmax);
           y1 = fy(tmax);
-          line(x0,y0,x1,y1);
+          line(x0, y0, x1, y1);
           break;
-      }else{
+        } else {
           x1 = fx(it);
           y1 = fy(it);
           _x1 = x1;
           _y1 = y1;
+        }
+
+        line(x0, y0, x1, y1);
       }
-      
-      line(x0,y0,x1,y1);
-  }
-  
-  return;
-}
 
-function dvecline(p0,p1){
-  
-  let di = 0.1;
-  let l = 2*PI;
-  
-  for(let i = -l+di ; i < l ; i+=di){
-    
-    let p_0 = vline(p0,p1,i);
-    //i+=di;
-    let p_1 = vline(p0,p1,i+di);
-    
-    //stroke(32);
-    //strokeWeight(0.02);
-    dline(p_0,p_1);
-  }
-  
-  return;
-}
-
-function gridpoint(w,h,tx,ty){
-  
-  let di = 0.1;
-  
-  let ih = map(tx,0,1, -h/2.0, h/2.0 );
-  let iw = map(ty,0,1, -w/2.0, w/2.0 );
-  
-  for (let iy = ih ; iy < h/2.0 ; iy += di){
-    for (let ix = iw ; ix < w/2.0 ; ix += di){
-      return [iy,ix];
-    }    
-  }
-  
-  return;
-}
-
-function dgridpoint(w,h,step){
-  
-  let q = 0.0;
-  
-  if(mod(w,step) != 0 || mod(h,step) != 0 ){
-    q = step;
-  }
-  
-  for (let iy = 0.0 ; iy <= h/2.0 + q; iy += step){
-    for (let ix = 0.0 ; ix <= w/2.0 + q ; ix += step){
-            
-      point(ix,iy);
-      point(-ix,iy);
-      point(-ix,-iy);
-      point(ix,-iy);
-      
-    }    
-  }
-  
-  return;
-}
-
-function dfunction (fx,fy,tmin,tmax, xmin,xmax, ymin,ymax, tstep,tscale){
-  
-  let x0 = 0.0;
-  let y0 = 0.0;
-  let x1 = 0.0;
-  let y1 = 0.0;
-  
-  for(let it = tmin ; it < tmax-tstep ; it += tstep){
-    
-    x0 = fx(it)*tscale;
-    y0 = fy(it)*tscale;
-    
-    x1 = fx(it+tstep)*tscale;
-    y1 = fy(it+tstep)*tscale;
-    
-    let c0 = (xmin <= x0 && x0 <= xmax) && (ymin <= y0 && y0 <= ymax);
-    let c1 = (xmin <= x1 && x1 <= xmax) && (ymin <= y1 && y1 <= ymax);
-    
-    if( c0 && c1 ){
-      line(x0,y0, x1,y1);
+      return;
     }
-    
-  }
-  
-  
-  return;
-}
+
+    function dvecline(p0, p1) {
+
+      let di = 0.1;
+      let l = 2 * PI;
+
+      for (let i = -l + di; i < l; i += di) {
+
+        let p_0 = vline(p0, p1, i);
+        //i+=di;
+        let p_1 = vline(p0, p1, i + di);
+
+        //stroke(32);
+        //strokeWeight(0.02);
+        dline(p_0, p_1);
+      }
+
+      return;
+    }
+
+    function gridpoint(w, h, tx, ty) {
+
+      let di = 0.1;
+
+      let ih = map(tx, 0, 1, -h / 2.0, h / 2.0);
+      let iw = map(ty, 0, 1, -w / 2.0, w / 2.0);
+
+      for (let iy = ih; iy < h / 2.0; iy += di) {
+        for (let ix = iw; ix < w / 2.0; ix += di) {
+          return [iy, ix];
+        }
+      }
+
+      return;
+    }
+
+    function dgridpoint(w, h, step) {
+
+      let q = 0.0;
+
+      if (mod(w, step) != 0 || mod(h, step) != 0) {
+        q = step;
+      }
+
+      for (let iy = 0.0; iy <= h / 2.0 + q; iy += step) {
+        for (let ix = 0.0; ix <= w / 2.0 + q; ix += step) {
+
+          point(ix, iy);
+          point(-ix, iy);
+          point(-ix, -iy);
+          point(ix, -iy);
+
+        }
+      }
+
+      return;
+    }
+
+    function dfunction(fx, fy, tmin, tmax, xmin, xmax, ymin, ymax, tstep, tscale) {
+
+      let x0 = 0.0;
+      let y0 = 0.0;
+      let x1 = 0.0;
+      let y1 = 0.0;
+
+      for (let it = tmin; it < tmax - tstep; it += tstep) {
+
+        x0 = fx(it) * tscale;
+        y0 = fy(it) * tscale;
+
+        x1 = fx(it + tstep) * tscale;
+        y1 = fy(it + tstep) * tscale;
+
+        let c0 = (xmin <= x0 && x0 <= xmax) && (ymin <= y0 && y0 <= ymax);
+        let c1 = (xmin <= x1 && x1 <= xmax) && (ymin <= y1 && y1 <= ymax);
+
+        if (c0 && c1) {
+          line(x0, y0, x1, y1);
+        }
+
+      }
 
 
-//math functions
+      return;
+    }
 
-function vmod(v, n) {
-    return v.map(x => x % n);
-}
 
-function vabs(a) {
-    return a.map(Math.abs);
-}
+    //math functions
 
-function vmax(a, b) {
-    if (Array.isArray(a) && Array.isArray(b)) {
+    function vmod(v, n) {
+      return v.map(x => x % n);
+    }
+
+    function vabs(a) {
+      return a.map(Math.abs);
+    }
+
+    function vmax(a, b) {
+      if (Array.isArray(a) && Array.isArray(b)) {
 
         let result = [];
-        for(let i = 0; i < a.length; i++) {
-            result[i] = Math.max(a[i], b[i]);
+        for (let i = 0; i < a.length; i++) {
+          result[i] = Math.max(a[i], b[i]);
         }
         return result;
-    } else if (Array.isArray(a)) {
+      } else if (Array.isArray(a)) {
 
         let result = [];
-        for(let i = 0; i < a.length; i++) {
-            result[i] = Math.max(a[i], b);
+        for (let i = 0; i < a.length; i++) {
+          result[i] = Math.max(a[i], b);
         }
         return result;
-    } else if (Array.isArray(b)) {
-        
+      } else if (Array.isArray(b)) {
+
         let result = [];
-        for(let i = 0; i < b.length; i++) {
-            result[i] = Math.max(a, b[i]);
+        for (let i = 0; i < b.length; i++) {
+          result[i] = Math.max(a, b[i]);
         }
         return result;
-    } else {
-        
+      } else {
+
         return Math.max(a, b);
-    }
-}
-
-function vmult(a,b) {
-  
-    if (typeof a === 'number') {
-        let v = [];
-        for(let i = 0 ; i < b.length ; i++){
-          v.push(a*b[i]);
-        }
-        return v;
-    }
-    if (typeof b === 'number') {
-        let v = [];
-        for(let i = 0 ; i < a.length ; i++){
-          v.push(b*a[i]);
-        }
-        return v;
-    }
-    if (typeof a === 'number' && typeof b === 'number'){      
-        return a*b;
-    }else{
-      
-      let v = [];
-      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
-          v.push(a[i]*b[i]);
       }
-      return v;
     }
-  
-    return [];
-}
 
-function vdiv(a,b) {
-  
-  if (typeof a === 'number') {
+    function vmult(a, b) {
+
+      if (typeof a === 'number') {
         let v = [];
-        for(let i = 0 ; i < b.length ; i++){
-          v.push((1.0/a)*b[i]);
+        for (let i = 0; i < b.length; i++) {
+          v.push(a * b[i]);
         }
         return v;
-  }
-  if (typeof b === 'number') {
-        let v = [];
-        for(let i = 0 ; i < a.length ; i++){
-          v.push((1.0/b)*a[i]);
-        }
-        return v;
-  }
-  if (typeof a === 'number' && typeof b === 'number'){      
-        return a/b;
-    }else{
-      
-      let v = [];
-      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
-          v.push(a[i]/b[i]);
       }
-      return v;
-    }
-    
-   return [];
-}
-
-function vnormalize(v){
-  
-  let n = 0.0;
-  for(let i = 0 ; i < v.length ; i++){
-     n += v[i]*v[i];
-  }
-  let l = sqrt(n);
-  
-  return vmult(1.0/l,v);
-}
-
-function vadd(a,b) {
-    
-    if (typeof a === 'number') {
+      if (typeof b === 'number') {
         let v = [];
-        for(let i = 0 ; i < b.length ; i++){
-          v.push(a+b[i]);
+        for (let i = 0; i < a.length; i++) {
+          v.push(b * a[i]);
         }
         return v;
-    }
-    if (typeof b === 'number') {
-        let v = [];
-        for(let i = 0 ; i < a.length ; i++){
-          v.push(b+a[i]);
-        }
-        return v;
-    }
-    if (typeof a === 'number' && typeof b === 'number'){      
-        return a+b;
-    }else{
-      
-      let v = [];
-      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
-          v.push(a[i]+b[i]);
       }
-      return v;
-    }
-  
-    return [];
-}
+      if (typeof a === 'number' && typeof b === 'number') {
+        return a * b;
+      } else {
 
-function vsub(a,b) {
-    
-    if (typeof a === 'number') {
         let v = [];
-        for(let i = 0 ; i < b.length ; i++){
-          v.push(b[i]-a);
+        for (let i = 0; i < b.length && (a.length == b.length); i++) {
+          v.push(a[i] * b[i]);
         }
         return v;
-    }
-    if (typeof b === 'number') {
-        let v = [];
-        for(let i = 0 ; i < a.length ; i++){
-          v.push(a[i]-b);
-        }
-        return v;
-    }
-    if (typeof a === 'number' && typeof b === 'number'){      
-        return a-b;
-    }else{
-      
-      let v = [];
-      for(let i = 0 ; i < b.length && (a.length == b.length) ; i++){
-          v.push(a[i]-b[i]);
       }
-      return v;
-    }
-  
-    return [];
-}
 
-function vdot(a, b) {
-    if (a.length !== b.length) {
+      return [];
+    }
+
+    function vdiv(a, b) {
+
+      if (typeof a === 'number') {
+        let v = [];
+        for (let i = 0; i < b.length; i++) {
+          v.push((1.0 / a) * b[i]);
+        }
+        return v;
+      }
+      if (typeof b === 'number') {
+        let v = [];
+        for (let i = 0; i < a.length; i++) {
+          v.push((1.0 / b) * a[i]);
+        }
+        return v;
+      }
+      if (typeof a === 'number' && typeof b === 'number') {
+        return a / b;
+      } else {
+
+        let v = [];
+        for (let i = 0; i < b.length && (a.length == b.length); i++) {
+          v.push(a[i] / b[i]);
+        }
+        return v;
+      }
+
+      return [];
+    }
+
+    function vnormalize(v) {
+
+      let n = 0.0;
+      for (let i = 0; i < v.length; i++) {
+        n += v[i] * v[i];
+      }
+      let l = sqrt(n);
+
+      return vmult(1.0 / l, v);
+    }
+
+    function vadd(a, b) {
+
+      if (typeof a === 'number') {
+        let v = [];
+        for (let i = 0; i < b.length; i++) {
+          v.push(a + b[i]);
+        }
+        return v;
+      }
+      if (typeof b === 'number') {
+        let v = [];
+        for (let i = 0; i < a.length; i++) {
+          v.push(b + a[i]);
+        }
+        return v;
+      }
+      if (typeof a === 'number' && typeof b === 'number') {
+        return a + b;
+      } else {
+
+        let v = [];
+        for (let i = 0; i < b.length && (a.length == b.length); i++) {
+          v.push(a[i] + b[i]);
+        }
+        return v;
+      }
+
+      return [];
+    }
+
+    function vsub(a, b) {
+
+      if (typeof a === 'number') {
+        let v = [];
+        for (let i = 0; i < b.length; i++) {
+          v.push(b[i] - a);
+        }
+        return v;
+      }
+      if (typeof b === 'number') {
+        let v = [];
+        for (let i = 0; i < a.length; i++) {
+          v.push(a[i] - b);
+        }
+        return v;
+      }
+      if (typeof a === 'number' && typeof b === 'number') {
+        return a - b;
+      } else {
+
+        let v = [];
+        for (let i = 0; i < b.length && (a.length == b.length); i++) {
+          v.push(a[i] - b[i]);
+        }
+        return v;
+      }
+
+      return [];
+    }
+
+    function vdot(a, b) {
+      if (a.length !== b.length) {
         throw new Error("Both vectors must be of the same length.");
-    }
-    let product = 0.0;
-    for(let i = 0; i < a.length; i++) {
+      }
+      let product = 0.0;
+      for (let i = 0; i < a.length; i++) {
         product += a[i] * b[i];
+      }
+      return product;
     }
-    return product;
-}
 
-function vcross(a, b) {
-    let c = [
-        a[1]*b[2] - a[2]*b[1],
-        a[2]*b[0] - a[0]*b[2],
-        a[0]*b[1] - a[1]*b[0]
-    ];
-    return c;
-}
-
-function vdist(a,b){
-  
-  let n = 0.0;
-  for(let i = 0 ; i < a.length && (a.length == b.length); i++){
-     n += (a[i]-b[i])*(a[i]-b[i]);
-  }
-  
-  return sqrt(n);
-}
-
-function vnorm(v){
-  
-  let n = 0.0;
-  for(let i = 0 ; i < v.length ; i++){
-     n += v[i]*v[i];
-  }
-
-  return sqrt(n);
-}
-
-function vlength(v){
-  
-  return vnorm(v);
-}
-
-function vpline(p0,p1,t){
-  
-  let u = vsub(p1,p0);
-  u = vnormalize(u);
-  
-  return vadd(p0,vmult(u,t));
-}
-
-function vline(p,u,t){
-  
-  return vadd(p,vmult(u,t));
-}
-
-function dvline(p,u,tmin,tmax){
-  
-  let di = 0.032;
-  for(let i = tmin ; i <= tmax ; i+=di){
-    
-    let p1 = vadd(p,vmult(u,i));
-    let p2 = vadd(p,vmult(u,i+di));
-    
-    line(p1[0],p1[1], p2[0],p2[1]);
-    //dline(p1,p2);
-    
-  }
-  
-  return;
-}
-
-function vflip2(v){
-  
-  return [v[1],v[0]];
-}
-
-function twilightshifted(t) {
-    
-    if (!(t >= 0.0 && t <= 1.0)){
-      t = tsn(t,0.0,1.0);    
+    function vcross(a, b) {
+      let c = [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+      ];
+      return c;
     }
-      
-    const c0 = [0.120488, 0.047735, 0.106111];
-    const c1 = [5.175161, 0.597944, 7.333840];
-    const c2 = [-47.426009, -0.862094, -49.143485];
-    const c3 = [197.225325, 47.538667, 194.773468];
-    const c4 = [-361.218441, -146.888121, -389.642741];
-    const c5 = [298.941929, 151.947507, 359.860766];
-    const c6 = [-92.697067, -52.312119, -123.143476];
-    //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
-    return vadd(c0, vmult(t, vadd( c1, vmult(t, vadd( c2, vmult(t, vadd( c3, vmult(t, vadd( c4, vmult(t, vadd(c5,vmult(t,c6))))))))))));
-}
 
-function step(a, x) {
-    return x < a ? 0.0 : 1.0;
-}
+    function vdist(a, b) {
 
-function clamp(x, minVal, maxVal) {
-    return Math.min(Math.max(x, minVal), maxVal);
-}
+      let n = 0.0;
+      for (let i = 0; i < a.length && (a.length == b.length); i++) {
+        n += (a[i] - b[i]) * (a[i] - b[i]);
+      }
 
-function frac(x){
-  
-  return x - floor(x);
-}
+      return sqrt(n);
+    }
 
-function smoothstep(edge0, edge1, x) {
-    let t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return t * t * (3.0 - 2.0 * t);
-}
+    function vnorm(v) {
 
-function lerpnum(a,b,t){
-  return (1-t)*a + t*b;
-}
+      let n = 0.0;
+      for (let i = 0; i < v.length; i++) {
+        n += v[i] * v[i];
+      }
 
-function lerpvec3(p0,p1,t){
-  
-  let x0 = p0[0];
-  let y0 = p0[1];
-  let z0 = p0[2];
-  let x1 = p1[0];
-  let y1 = p1[1];
-  let z1 = p1[2];
-  
-  return [(1-t)*x0 + t*x1, (1-t)*y0 + t*y1 , (1-t)*z0 + t*z1];
-  //return [lerpnum(p0[0],p1[0],t),lerpnum(p0[1],p1[1],t),lerpnum(p0[2],p1[2],t)];
-}
+      return sqrt(n);
+    }
 
-function lerpvec2(p0,p1,t){
-  
-  let x0 = p0[0];
-  let y0 = p0[1];
-  let x1 = p1[0];
-  let y1 = p1[1];
+    function vlength(v) {
 
-  return [(1-t)*x0 + t*x1, (1-t)*y0 + t*y1];
-  //return [lerpnum(p0[0],p1[0],t),lerpnum(p0[1],p1[1],t),lerpnum(p0[2],p1[2],t)];
-}
+      return vnorm(v);
+    }
 
-function arctheta(x1,y1,x2,y2){
-    let dx = x2 - x1;
-    let dy = y2 - y1;
-    
-    if(dx == 0){return sgn(dy)*PI/2.0; }
-    
-    if (0 < dx && 0 < dy){ return acos (  dx/(sqrt(dx*dx + dy*dy))  ); }
-    if (dx <= 0 && 0 < dy ){ return acos (  dx/(sqrt(dx*dx + dy*dy))  ); }
-    if (dx < 0  && dy <= 0){ return PI + atan (dy/dx); }
-    if (0<= dx  && dy < 0 ){ return 2*PI + atan (dy/dx); }
-    return 0;
-}
+    function vpline(p0, p1, t) {
 
-function arcphi(x0,y0,z0, x1,y1,z1){
-    h0 = Math.sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0));
-    h1 = Math.sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) );
-    dz = z1 - z0
-    return h1 > 0  ? (dz >= 0 ? Math.acos(h1/h0) : -Math.acos(h1/h0)): sgn(dz)*Math.PI/2.0;
-}
+      let u = vsub(p1, p0);
+      u = vnormalize(u);
 
-function mod(a,b){
-  return  a-b*Math.floor(a/b);
-}
+      return vadd(p0, vmult(u, t));
+    }
 
-function sinh(x){  
-  return (exp(x)-exp(-x))/2.0;
-}
+    function vline(p, u, t) {
 
-function cosh(x){  
-  return (exp(x)+exp(-x))/2.0;
-}
+      return vadd(p, vmult(u, t));
+    }
 
-function coth(x){  
-  return cosh(x)/sinh(x);
-}
+    function dvline(p, u, tmin, tmax) {
 
-function sech(x){  
-  return 1/cosh(x);
-}
+      let di = 0.032;
+      for (let i = tmin; i <= tmax; i += di) {
 
-function csch(x){  
-  return 1/sinh(x);
-}
+        let p1 = vadd(p, vmult(u, i));
+        let p2 = vadd(p, vmult(u, i + di));
 
-function tanh(x){
-  
-  return (exp(x)-exp(-x))/(exp(x)+exp(-x));
-}
+        line(p1[0], p1[1], p2[0], p2[1]);
+        //dline(p1,p2);
 
-function tnh(x){
-  
-  let a = 8.0;
-  
-  return x <= -a ? -1.0 :  a <= x ? 1.0 : tanh(x);
-}
+      }
 
-function sigmoid(x){
-  
-  return 1.0/(1.0+exp(-x));
-}
+      return;
+    }
 
-function sgm(x){
-  
-  let a = 8.0;
-  
-  return x <= -a ? 0.0 :  a <= x ? 1.0 : sigmoid(2.0*x);
-}
+    function vflip2(v) {
 
-function sgn(x){
-	return ( x < 0 ? -1 : (x > 0 ? 1 : 0) );
-}
+      return [v[1], v[0]];
+    }
 
-function tsn(x,min,max){
-  
-  //Vec3DeepLoop365!
-  var a = abs (min) + abs(max);
-  var p = 2.0*a;
-  var y = min; 
-  
-  //r*sin(x/p)
-  //r*(2.0*abs( 2*( x/p - floor(x/p  + 0.75) + 0.25 )) - 1.0) ;  
-    
-  return  a*( abs( 2*(x/p - floor(x/p  + 0.5)))) + y;  
-}
+    function twilightshifted(t) {
 
-function tgn(x,a,b,c){
-  
-  return c*Math.min( mod(-a*x,b), mod(a*x,b) );
-}
+      if (!(t >= 0.0 && t <= 1.0)) {
+        t = tsn(t, 0.0, 1.0);
+      }
 
-function twa(x){
-  
-  return tsn(x,0.0,1.0);
-}
+      const c0 = [0.120488, 0.047735, 0.106111];
+      const c1 = [5.175161, 0.597944, 7.333840];
+      const c2 = [-47.426009, -0.862094, -49.143485];
+      const c3 = [197.225325, 47.538667, 194.773468];
+      const c4 = [-361.218441, -146.888121, -389.642741];
+      const c5 = [298.941929, 151.947507, 359.860766];
+      const c6 = [-92.697067, -52.312119, -123.143476];
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+    }
 
+    function step(a, x) {
+      return x < a ? 0.0 : 1.0;
+    }
 
-let camera3d = {
-  pos: [0,0,0],
-  rot: [0,0,0]
-};
+    function clamp(x, minVal, maxVal) {
+      return Math.min(Math.max(x, minVal), maxVal);
+    }
 
-function setcamera(){
-  
-  
-  
-  return;
-}
+    function frac(x) {
 
-function vprojection(px,py,pz, tx,ty,tz, rx,ry,rz, aspect, fov, znear, zfar){
-  
-  //perspective projection
-  
-  let x = px;
-  let y = py;
-  let z = pz;
-  
-  let X = tx;
-  let Y = ty;
-  let Z = tz;
-  
-  let a = rx;
-  let b = ry;
-  let c = rz;
-  
-  let s = aspect;
-  let o = fov;
-  let n = znear;
-  let f = zfar;
-  
-  px =  1.0*x*cos(b)*cos(c)/(s*tan(0.5*o)) - 1.0*y*cos(b)*sin(c)/(s*tan(0.5*o)) - 1.0*z*sin(b)/(s*tan(0.5*o)) + X;
-  py =  -1.0*z*cos(b)*sin(a)/tan(0.50*o) - 1.0*(cos(c)*sin(a)*sin(b) - cos(a)*sin(c))*x/tan(0.5*o) + 1.0*(sin(a)*sin(b)*sin(c) + cos(a)*cos(c))*y/tan(0.5*o) + Y;
-  pz =  -(f + n)*z*cos(a)*cos(b)/(f - n) - (cos(a)*cos(c)*sin(b) + sin(a)*sin(c))*(f + n)*x/(f - n) + (cos(a)*sin(b)*sin(c) - cos(c)*sin(a))*(f + n)*y/(f - n) - 2.0*f*n/(f - n) + Z;
-  let pw =  -z*cos(a)*cos(b) - (cos(a)*cos(c)*sin(b) + sin(a)*sin(c))*x + (cos(a)*sin(b)*sin(c) - cos(c)*sin(a))*y + 1 ;
-  
-  return [px,py,pz,pw];
+      return x - floor(x);
+    }
 
-}
+    function smoothstep(edge0, edge1, x) {
+      let t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+      return t * t * (3.0 - 2.0 * t);
+    }
 
-function vperspective(px,py,pz, tx,ty,tz, rx,ry,rz){
-  
-  //perspective projection
-  
-  //point
-  let x = px;
-  let y = py;
-  let z = pz;
-  
-  //translate
-  let X = tx; 
-  let Y = ty;
-  let Z = tz;
-  
-  //scale
-  let s = 1.0;
-  
-  //rotation
-  let a = rx-PI/3.0; 
-  let b = ry;
-  let c = rz+PI-TIME*0.35;
-  
-  let aspr = 1.0; //aspect ratio
-  let o = 60*(PI/180.0); //fov
-  let n = 5.0;   //znear
-  let f = 500.0; //zfar
-  
-  let vec = vprojection(px*s,py*s,-pz*s, tx,ty,tz, a,b,c, aspr, o, n, f);
-  
-  return vec;
+    function lerpnum(a, b, t) {
+      return (1 - t) * a + t * b;
+    }
 
-}
+    function lerpvec3(p0, p1, t) {
 
+      let x0 = p0[0];
+      let y0 = p0[1];
+      let z0 = p0[2];
+      let x1 = p1[0];
+      let y1 = p1[1];
+      let z1 = p1[2];
 
-function xperspective(x,y,z, tx,ty,tz, rx,ry,rz){
-  
-  let vec = vperspective(x,y,z, tx,ty,tz, rx,ry,rz); 
-  let X = vec[0]/vec[2];
-  //let Y = vec[1]/vec[2];
-  return X;
-}
+      return [(1 - t) * x0 + t * x1, (1 - t) * y0 + t * y1, (1 - t) * z0 + t * z1];
+      //return [lerpnum(p0[0],p1[0],t),lerpnum(p0[1],p1[1],t),lerpnum(p0[2],p1[2],t)];
+    }
 
-function yperspective(x,y,z, tx,ty,tz, rx,ry,rz){
-  
-  let vec = vperspective(x,y,z, tx,ty,tz, rx,ry,rz); 
-  //let X = vec[0]/vec[2];
-  let Y = vec[1]/vec[2];
-  return Y;
-}
+    function lerpvec2(p0, p1, t) {
 
-function dpoint3d(x,y,z){
-  
-  let p = vperspective(x,y,z, 0,0,0, 0,0,0); 
-  point(p[0]/p[2], p[1]/p[2]);
-  
-  return;
-}
+      let x0 = p0[0];
+      let y0 = p0[1];
+      let x1 = p1[0];
+      let y1 = p1[1];
 
-function dline3d(x1,y1,z1, x2,y2,z2){
-  
-  let p1 = vperspective(x1,y1,z1, 0,0,0, 0,0,0);
-  let p2 = vperspective(x2,y2,z2, 0,0,0, 0,0,0);
-  
-  line(p1[0]/p1[2], p1[1]/p1[2],
-       p2[0]/p2[2], p2[1]/p2[2],);
-  
-  return;
-}
+      return [(1 - t) * x0 + t * x1, (1 - t) * y0 + t * y1];
+      //return [lerpnum(p0[0],p1[0],t),lerpnum(p0[1],p1[1],t),lerpnum(p0[2],p1[2],t)];
+    }
+
+    function arctheta(x1, y1, x2, y2) {
+      let dx = x2 - x1;
+      let dy = y2 - y1;
+
+      if (dx == 0) { return sgn(dy) * PI / 2.0; }
+
+      if (0 < dx && 0 < dy) { return acos(dx / (sqrt(dx * dx + dy * dy))); }
+      if (dx <= 0 && 0 < dy) { return acos(dx / (sqrt(dx * dx + dy * dy))); }
+      if (dx < 0 && dy <= 0) { return PI + atan(dy / dx); }
+      if (0 <= dx && dy < 0) { return 2 * PI + atan(dy / dx); }
+      return 0;
+    }
+
+    function arcphi(x0, y0, z0, x1, y1, z1) {
+      h0 = Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) + (z1 - z0) * (z1 - z0));
+      h1 = Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+      dz = z1 - z0
+      return h1 > 0 ? (dz >= 0 ? Math.acos(h1 / h0) : -Math.acos(h1 / h0)) : sgn(dz) * Math.PI / 2.0;
+    }
+
+    function mod(a, b) {
+      return a - b * Math.floor(a / b);
+    }
+
+    function sinh(x) {
+      return (exp(x) - exp(-x)) / 2.0;
+    }
+
+    function cosh(x) {
+      return (exp(x) + exp(-x)) / 2.0;
+    }
+
+    function coth(x) {
+      return cosh(x) / sinh(x);
+    }
+
+    function sech(x) {
+      return 1 / cosh(x);
+    }
+
+    function csch(x) {
+      return 1 / sinh(x);
+    }
+
+    function tanh(x) {
+
+      return (exp(x) - exp(-x)) / (exp(x) + exp(-x));
+    }
+
+    function tnh(x) {
+
+      let a = 8.0;
+
+      return x <= -a ? -1.0 : a <= x ? 1.0 : tanh(x);
+    }
+
+    function sigmoid(x) {
+
+      return 1.0 / (1.0 + exp(-x));
+    }
+
+    function sgm(x) {
+
+      let a = 8.0;
+
+      return x <= -a ? 0.0 : a <= x ? 1.0 : sigmoid(2.0 * x);
+    }
+
+    function sgn(x) {
+      return (x < 0 ? -1 : (x > 0 ? 1 : 0));
+    }
+
+    function tsn(x, min, max) {
+
+      //Vec3DeepLoop365!
+      var a = abs(min) + abs(max);
+      var p = 2.0 * a;
+      var y = min;
+
+      //r*sin(x/p)
+      //r*(2.0*abs( 2*( x/p - floor(x/p  + 0.75) + 0.25 )) - 1.0) ;  
+
+      return a * (abs(2 * (x / p - floor(x / p + 0.5)))) + y;
+    }
+
+    function tgn(x, a, b, c) {
+
+      return c * Math.min(mod(-a * x, b), mod(a * x, b));
+    }
+
+    function twa(x) {
+
+      return tsn(x, 0.0, 1.0);
+    }
 
 
 
-    
+
+
+    function vprojection(px, py, pz, tx, ty, tz, rx, ry, rz, aspect, fov, znear, zfar) {
+
+      //perspective projection
+
+      let x = px;
+      let y = py;
+      let z = pz;
+
+      let X = tx;
+      let Y = ty;
+      let Z = tz;
+
+      let a = rx;
+      let b = ry;
+      let c = rz;
+
+      let s = aspect;
+      let o = fov;
+      let n = znear;
+      let f = zfar;
+
+      px = 1.0 * x * cos(b) * cos(c) / (s * tan(0.5 * o)) - 1.0 * y * cos(b) * sin(c) / (s * tan(0.5 * o)) - 1.0 * z * sin(b) / (s * tan(0.5 * o)) + X;
+      py = -1.0 * z * cos(b) * sin(a) / tan(0.50 * o) - 1.0 * (cos(c) * sin(a) * sin(b) - cos(a) * sin(c)) * x / tan(0.5 * o) + 1.0 * (sin(a) * sin(b) * sin(c) + cos(a) * cos(c)) * y / tan(0.5 * o) + Y;
+      pz = -(f + n) * z * cos(a) * cos(b) / (f - n) - (cos(a) * cos(c) * sin(b) + sin(a) * sin(c)) * (f + n) * x / (f - n) + (cos(a) * sin(b) * sin(c) - cos(c) * sin(a)) * (f + n) * y / (f - n) - 2.0 * f * n / (f - n) + Z;
+      let pw = -z * cos(a) * cos(b) - (cos(a) * cos(c) * sin(b) + sin(a) * sin(c)) * x + (cos(a) * sin(b) * sin(c) - cos(c) * sin(a)) * y + 1;
+
+      return [px, py, pz, pw];
+
+    }
+
+    function vperspective1(px, py, pz, tx, ty, tz, rx, ry, rz) {
+
+      //perspective projection
+
+      //point
+      let x = px;
+      let y = py;
+      let z = pz;
+
+      //translate
+      let X = tx;
+      let Y = ty;
+      let Z = tz;
+
+      //scale
+      let s = 0.1;
+
+      //rotation
+      let a = rx - PI / 3.0;
+      let b = ry;
+      let c = rz + PI - TIME * 0.2;
+
+      let aspr = 1.0; //aspect ratio
+      let o = (30) * (PI / 180.0); //fov
+      let n = 5;   //znear
+      let f = 500.0; //zfar
+
+      let vec = vprojection(px * s, py * s, -pz * s, X, Y, Z, a, b, c, aspr, o, n, f);
+
+      return vec;
+
+    }
+
+
+
+    function spherecam(targetX, targetY, targetZ, distance, theta, phi) {
+      cam.target = [targetX, targetY, targetZ];
+      cam.distance = distance;
+      cam.theta = theta;
+      cam.phi = phi;
+    }
+
+    function vperspective(px, py, pz, tx, ty, tz, rx, ry, rz) {
+
+      // 1) World-space translation: move target to origin
+      //    This MUST happen before rotation
+      let x = px - cam.target[0];
+      let y = py - cam.target[1];
+      let z = pz - cam.target[2];
+
+      // 2) Scale = 1/distance (farther = smaller, same as your old s)
+      let s = 1.0 / cam.distance;
+
+      // 3) Rotation from spherical coords
+      //    phi - PI/2 preserves your Z-up convention:
+      //      phi = 0     → a = -PI/2  (equator, looking from the side)
+      //      phi = PI/6  → a = -PI/3  (your original default)
+      //      phi = PI/3  → a = -PI/6  (higher up)
+      //      phi = PI/2  → a = 0      (north pole, top-down)
+      let a = cam.phi - HALF_PI;   // rx: elevation
+      let b = 0;                    // ry: unused (no roll)
+      let c = PI - cam.theta;      // rz: azimuth (PI offset = your convention)
+
+      let aspr = 1.0 + 0 * width / height;
+      let o = cam.fov * (PI / 180.0);
+      let n = 4;
+      let f = 500.0;
+
+      // -z*s flips Z into screen (your existing convention)
+      let vec = vprojection(x * s, y * s, z * s, 0, 0, 0, a, b, c, aspr, o, n, f);
+
+      return vec;
+    }
+
+    function xperspective(x, y, z, tx, ty, tz, rx, ry, rz) {
+
+      let vec = vperspective(x, y, z, tx, ty, tz, rx, ry, rz);
+      let X = vec[0] / vec[3];
+      //let Y = vec[1]/vec[2];
+      return X;
+    }
+
+    function yperspective(x, y, z, tx, ty, tz, rx, ry, rz) {
+
+      let vec = vperspective(x, y, z, tx, ty, tz, rx, ry, rz);
+      //let X = vec[0]/vec[2];
+      let Y = vec[1] / vec[3];
+      return Y;
+    }
+
+    function rotation3d(x, y, z, a, b, c) {
+
+      //XYZ R(x,y,z,a,b,c)
+
+      return [
+        (x * cos(b) + (z * cos(a) + y * sin(a)) * sin(b)) * cos(c) - (y * cos(a) - z * sin(a)) * sin(c),
+        (y * cos(a) - z * sin(a)) * cos(c) + (x * cos(b) + (z * cos(a) + y * sin(a)) * sin(b)) * sin(c),
+        (z * cos(a) + y * sin(a)) * cos(b) - x * sin(b)
+      ];
+
+    }
+
+    function getpoint3d(x, y, z) {
+      let p = vperspective(x, y, z);
+      if (p[3] < 0.01) return null;
+      return [p[0] / p[3], p[1] / p[3]];
+    }
+
+
+    function dpoint3d(x, y, z) {
+
+      //let p = vperspective(x,y,z, 0,0,0, 0,0,0); 
+      //point(p[0]/p[3], p[1]/p[3]);
+
+      let p = vperspective(x, y, z);
+
+      if ((p[3] > 0.01)) point(p[0] / p[3], p[1] / p[3]);
+
+      return;
+    }
+
+    function getpoint3d_(x, y, z) {
+      let p = vperspective(x, y, z, 0, 0, 0, 0, 0, 0);
+
+      return [p[0] / p[3], p[1] / p[3]];
+    }
+
+    function clipAndDrawLine3d(x1, y1, z1, x2, y2, z2) {
+
+      // Get clip-space coordinates (BEFORE dividing by w)
+      let c1 = vperspective(x1, y1, z1);
+      let c2 = vperspective(x2, y2, z2);
+
+      // Clip against near plane: w > 0 (equivalently -z_eye > 0)
+      // In clip-space the near plane condition is: w + z >= 0
+      // but the simplest useful clip is just w > epsilon
+      let w1 = c1[3];
+      let w2 = c2[3];
+      let wmin = 0.01;
+
+      // Both behind → discard entirely
+      if (w1 < wmin && w2 < wmin) return;
+
+      // Both in front → project and draw normally
+      if (w1 >= wmin && w2 >= wmin) {
+        line(c1[0] / w1, c1[1] / w1, c2[0] / w2, c2[1] / w2);
+        return;
+      }
+
+      // One in front, one behind → clip to near plane
+      // Interpolate to find the intersection point where w = wmin
+      // t is the parameter along the line where w crosses wmin
+      let t = (wmin - w1) / (w2 - w1);
+
+      // Interpolate ALL clip-space components (linear in clip-space!)
+      let cx = lerpnum(c1[0], c2[0], t);
+      let cy = lerpnum(c1[1], c2[1], t);
+      let cz = lerpnum(c1[2], c2[2], t);
+      let cw = lerpnum(c1[3], c2[3], t); // ≈ wmin
+
+      // Now draw from the valid point to the clipped intersection
+      if (w1 >= wmin) {
+        line(c1[0] / w1, c1[1] / w1, cx / cw, cy / cw);
+      } else {
+        line(cx / cw, cy / cw, c2[0] / w2, c2[1] / w2);
+      }
+    }
+
+
+    function dline3d(x1, y1, z1, x2, y2, z2) {
+
+      let p1 = vperspective(x1, y1, z1, 0, 0, 0, 0, 0, 0);
+      let p2 = vperspective(x2, y2, z2, 0, 0, 0, 0, 0, 0);
+
+      //line(p1[0]/p1[3], p1[1]/p1[3],
+      //     p2[0]/p2[3], p2[1]/p2[3]);
+
+      clipAndDrawLine3d(x1, y1, z1, x2, y2, z2);
+
+      return;
+    }
+
+    function dcube(w, h, d, xc, yc, zc, rx, ry, rz) {
+
+      let hw = w * 0.5;
+      let hh = h * 0.5;
+      let hd = d * 0.5;
+
+      // 8 vertices (local space)
+      let verts = [
+        [-hw, -hh, -hd],
+        [hw, -hh, -hd],
+        [hw, hh, -hd],
+        [-hw, hh, -hd],
+        [-hw, -hh, hd],
+        [hw, -hh, hd],
+        [hw, hh, hd],
+        [-hw, hh, hd]
+      ];
+
+      // 12 edges (index pairs)
+      let edges = [
+        [0, 1], [1, 2], [2, 3], [3, 0],  // back face
+        [4, 5], [5, 6], [6, 7], [7, 4],  // front face
+        [0, 4], [1, 5], [2, 6], [3, 7]   // connecting edges
+      ];
+
+      // Rotation ZYX
+      let ca = cos(rx), sa = sin(rx);
+      let cb = cos(ry), sb = sin(ry);
+      let cc = cos(rz), sc = sin(rz);
+
+      let r00 = cb * cc;
+      let r01 = sa * sb * cc - ca * sc;
+      let r02 = ca * sb * cc + sa * sc;
+      let r10 = cb * sc;
+      let r11 = sa * sb * sc + ca * cc;
+      let r12 = ca * sb * sc - sa * cc;
+      let r20 = -sb;
+      let r21 = sa * cb;
+      let r22 = ca * cb;
+
+      // Transform vertices
+      let tv = [];
+      for (let i = 0; i < 8; i++) {
+        let x = verts[i][0];
+        let y = verts[i][1];
+        let z = verts[i][2];
+        tv.push([
+          r00 * x + r01 * y + r02 * z + xc,
+          r10 * x + r11 * y + r12 * z + yc,
+          r20 * x + r21 * y + r22 * z + zc
+        ]);
+      }
+
+      // Draw 12 edges
+      for (let i = 0; i < edges.length; i++) {
+        let a = tv[edges[i][0]];
+        let b = tv[edges[i][1]];
+        dline3d(a[0], a[1], a[2], b[0], b[1], b[2]);
+      }
+    }
+
+    function dgrid3d(x, y, z, a, b, c, col, row, w, h, lineColor, lineThickness) {
+
+      stroke(lineColor);
+      strokeWeight(lineThickness);
+
+      let p1 = [];
+      let p2 = [];
+
+      //vertical lines
+      for (let ic = -w / 2.0; ic <= w / 2.0 + w / col * 0; ic += w / col) {
+
+        p1 = rotation3d(x + ic, y - h / 2.0, z, a, b, c);
+        p2 = rotation3d(x + ic, y + h / 2.0, z, a, b, c);
+
+        //dline3d(x+ic,y+-h/2.0,z, x+ic,y+h/2.0,z);
+
+        dline3d(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);
+      }
+
+      //horizontal lines
+      for (let ir = -h / 2.0; ir <= h / 2.0 + h / row * 0; ir += h / row) {
+
+        p1 = rotation3d(-w / 2.0 + x, ir + y, z, a, b, c);
+        p2 = rotation3d(w / 2.0 + x, ir + y, z, a, b, c);
+
+        //dline3d (-w/2.0 + x , ir + y ,z, w/2.0 + x , ir + y,z);
+
+        dline3d(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);
+      }
+
+      p1 = [];
+      p2 = [];
+
+      return;
+    }
+
+    function dtriangle3d(p1, p2, p3) {
+
+      let p1_ = getpoint3d(p1[0], p1[1], p1[2]);
+      let p2_ = getpoint3d(p2[0], p2[1], p2[2]);
+      let p3_ = getpoint3d(p3[0], p3[1], p3[2]);
+
+      triangle(p1_[0], p1_[1], p2_[0], p2_[1], p3_[0], p3_[1]);
+
+      return;
+    }
+
+    function dvec3d(tail, head, arrowLength, arrowWidth) {
+
+      let dx = head[0] - tail[0];
+      let dy = head[1] - tail[1];
+      let dz = head[2] - tail[2];
+      let len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (len < 1e-8) return;
+
+      // Unit direction
+      let ux = dx / len;
+      let uy = dy / len;
+      let uz = dz / len;
+
+      // Base point of arrowhead (where the line ends)
+      let bx = head[0] - arrowLength * ux;
+      let by = head[1] - arrowLength * uy;
+      let bz = head[2] - arrowLength * uz;
+
+      // Build perpendicular vectors (same idea as 2D [-dy,dx])
+      // Pick an arbitrary vector NOT parallel to u
+      let ax, ay, az;
+      if (Math.abs(ux) < 0.9) {
+        ax = 1; ay = 0; az = 0;
+      } else {
+        ax = 0; ay = 1; az = 0;
+      }
+
+      // First perpendicular: cross(u, arbitrary)
+      let n1x = uy * az - uz * ay;
+      let n1y = uz * ax - ux * az;
+      let n1z = ux * ay - uy * ax;
+      let n1l = Math.sqrt(n1x * n1x + n1y * n1y + n1z * n1z);
+      n1x /= n1l; n1y /= n1l; n1z /= n1l;
+
+      // Second perpendicular: cross(u, n1)
+      let n2x = uy * n1z - uz * n1y;
+      let n2y = uz * n1x - ux * n1z;
+      let n2z = ux * n1y - uy * n1x;
+
+      // Draw line from tail to base of arrow
+      dline3d(tail[0], tail[1], tail[2], bx, by, bz);
+
+      // Arrowhead: 3 points forming a triangle
+      // Tip = head
+      // Two base points offset along n1 and n2
+      let hw = arrowWidth * 0.5;
+
+      // Equilateral-ish triangle: 3 vertices on the base circle
+      // at 0°, 120°, 240° around the direction axis
+      // But for a flat arrow (like your 2D version), just 2 base + tip:
+      let p1 = head;
+      let p2 = [bx + hw * n1x, by + hw * n1y, bz + hw * n1z];
+      let p3 = [bx - hw * n1x, by - hw * n1y, bz - hw * n1z];
+
+      //dtriangle3d(p1, p2, p3);
+
+      // Second triangle perpendicular to the first (cross shape)
+      // gives the arrowhead volume from any viewing angle
+      let p4_ = [bx + hw * n2x, by + hw * n2y, bz + hw * n2z];
+      let p5_ = [bx - hw * n2x, by - hw * n2y, bz - hw * n2z];
+
+      dtriangle3d(p1, p4_, p5_);
+    }
+
+
+
+    function twilight(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [0.996106, 0.851653, 0.940566];
+      const c1 = [-6.529620, -0.183448, -3.940750];
+      const c2 = [40.899579, -7.894242, 38.569228];
+      const c3 = [-155.212979, 4.404793, -167.925730];
+      const c4 = [296.687222, 24.084913, 315.087856];
+      const c5 = [-261.270519, -29.995422, -266.972991];
+      const c6 = [85.335349, 9.602600, 85.227117];
+
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+
+    }
+
+    function twilightshifted(t) {
+
+      if (!(t >= 0.0 && t <= 1.0)) {
+        t = tsn(t, 0.0, 1.0);
+      }
+
+      const c0 = [0.120488, 0.047735, 0.106111];
+      const c1 = [5.175161, 0.597944, 7.333840];
+      const c2 = [-47.426009, -0.862094, -49.143485];
+      const c3 = [197.225325, 47.538667, 194.773468];
+      const c4 = [-361.218441, -146.888121, -389.642741];
+      const c5 = [298.941929, 151.947507, 359.860766];
+      const c6 = [-92.697067, -52.312119, -123.143476];
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+    }
+
+    function hsv(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [0.834511, -0.153764, -0.139860];
+      const c1 = [8.297883, 13.629371, 7.673034];
+      const c2 = [-80.602944, -80.577977, -90.865764];
+      const c3 = [245.028545, 291.294154, 390.181844];
+      const c4 = [-376.406597, -575.667879, -714.180803];
+      const c5 = [306.639709, 538.472148, 596.580595];
+      const c6 = [-102.934273, -187.108098, -189.286489];
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+
+    }
+
+    function afmhot(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [-0.020390, 0.009557, 0.018508];
+      const c1 = [3.108226, -0.106297, -1.105891];
+      const c2 = [-14.539061, -2.943057, 14.548595];
+      const c3 = [71.394557, 22.644423, -71.418400];
+      const c4 = [-152.022488, -31.024563, 152.048692];
+      const c5 = [139.593599, 12.411251, -139.604042];
+      const c6 = [-46.532952, -0.000874, 46.532928];
+
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+
+    }
+
+    function cmrmap(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [-0.046981, 0.001239, 0.005501];
+      const c1 = [4.080583, 1.192717, 3.049337];
+      const c2 = [-38.877409, 1.524425, 20.200215];
+      const c3 = [189.038452, -32.746447, -140.774611];
+      const c4 = [-382.197327, 95.587531, 270.024592];
+      const c5 = [339.891791, -100.379096, -212.471161];
+      const c6 = [-110.928480, 35.828481, 60.985694];
+
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+
+
+    }
+
+    function coolwarm(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [0.227376, 0.286898, 0.752999];
+      const c1 = [1.204846, 2.314886, 1.563499];
+      const c2 = [0.102341, -7.369214, -1.860252];
+      const c3 = [2.218624, 32.578457, -1.643751];
+      const c4 = [-5.076863, -75.374676, -3.704589];
+      const c5 = [1.336276, 73.453060, 9.595678];
+      const c6 = [0.694723, -25.863102, -4.558659];
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+
+    }
+
+    function jet(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [-0.071839, 0.105300, 0.510959];
+      const c1 = [3.434264, -5.856282, 5.020179];
+      const c2 = [-35.088272, 62.590515, -12.661725];
+      const c3 = [125.621078, -187.192678, 8.399805];
+      const c4 = [-179.495111, 277.458688, -26.089763];
+      const c5 = [113.825719, -218.486063, 52.463600];
+      const c6 = [-27.714880, 71.427477, -27.714893];
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+
+    }
+
+    function rainbow(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [0.503560, -0.002932, 1.000009];
+      const c1 = [-1.294985, 3.144463, 0.001872];
+      const c2 = [-16.971202, 0.031355, -1.232219];
+      const c3 = [97.134102, -5.180126, -0.029721];
+      const c4 = [-172.585487, -0.338714, 0.316782];
+      const c5 = [131.971426, 3.514534, -0.061568];
+      const c6 = [-37.784412, -1.171512, 0.003376];
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+    }
+
+    function rdtlbu_r(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [0.207621, 0.196195, 0.618832];
+      const c1 = [-0.088125, 3.196170, -0.353302];
+      const c2 = [8.261232, -8.366855, 14.368787];
+      const c3 = [-2.922476, 33.244294, -43.419173];
+      const c4 = [-34.085327, -74.476041, 37.159352];
+      const c5 = [50.429790, 67.145621, -1.750169];
+      const c6 = [-21.188828, -20.935464, -6.501427];
+
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+
+    }
+
+    function spectral_r(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [0.426208, 0.275203, 0.563277];
+      const c1 = [-5.321958, 3.761848, 5.477444];
+      const c2 = [42.422339, -15.057685, -57.232349];
+      const c3 = [-100.917716, 57.029463, 232.590601];
+      const c4 = [106.422535, -116.177338, -437.123306];
+      const c5 = [-48.460514, 103.570154, 378.807920];
+      const c6 = [6.016269, -33.393152, -122.850806];
+
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+
+    }
+
+    function viridis(t) {
+
+      t = 0.0 <= t && t <= 1.0 ? t : tsn(t, 0.0, 1.0);
+
+      const c0 = [0.274344, 0.004462, 0.331359];
+      const c1 = [0.108915, 1.397291, 1.388110];
+      const c2 = [-0.319631, 0.243490, 0.156419];
+      const c3 = [-4.629188, -5.882803, -19.646115];
+      const c4 = [6.181719, 14.388598, 57.442181];
+      const c5 = [4.876952, -13.955112, -66.125783];
+      const c6 = [-5.513165, 4.709245, 26.582180];
+      //return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+
+      return vadd(c0, vmult(t, vadd(c1, vmult(t, vadd(c2, vmult(t, vadd(c3, vmult(t, vadd(c4, vmult(t, vadd(c5, vmult(t, c6))))))))))));
+
+    }
 
 
   </script>
 </body>
+
 </html>
