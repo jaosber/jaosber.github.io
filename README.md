@@ -15,4 +15,4 @@ npm run dev
 
 ## Deploy
 
-Push to `main` — GitHub Actions builds and deploys automatically.
+Push to `main` — GitHub Actions builds and deploys automatically
